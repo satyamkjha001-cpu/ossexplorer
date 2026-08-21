@@ -2,15 +2,34 @@ export type GitHubRepository = {
   id: number;
   name: string;
   full_name: string;
+
   html_url: string;
+
   description: string | null;
 
+  homepage: string | null;
+
+  private: boolean;
+
+  fork: boolean;
+
+  archived: boolean;
+
+  disabled: boolean;
+
+  is_template: boolean;
+
   stargazers_count: number;
+
   forks_count: number;
+
   open_issues_count: number;
 
   watchers_count: number;
+
   language: string | null;
+
+  size: number;
 
   license: {
     name: string;
@@ -19,8 +38,26 @@ export type GitHubRepository = {
 
   topics: string[];
 
+  has_issues: boolean;
+
+  has_projects: boolean;
+
+  has_wiki: boolean;
+
+  has_discussions: boolean;
+
+  has_pages: boolean;
+
+  has_downloads: boolean;
+
+  has_pull_requests: boolean;
+
+  allow_forking: boolean;
+
   created_at: string;
+
   updated_at: string;
+
   pushed_at: string | null;
 
   default_branch: string;
