@@ -14,6 +14,7 @@ import {
   DIFFICULTIES,
   SORT_LABELS,
   type SortOption,
+  type TechnologyMatchMode,
 } from "@/lib/projectFilters";
 
 import { cn } from "@/lib/cn";
@@ -26,6 +27,7 @@ type FilterPanelProps = {
   selectedTechnologies: string[];
   selectedDifficulty: string;
   sortOption: SortOption;
+  technologyMatchMode: TechnologyMatchMode;
 
   domains: string[];
   technologies: string[];
@@ -33,6 +35,9 @@ type FilterPanelProps = {
   onSearchChange: (value: string) => void;
   onDomainChange: (value: string) => void;
   onTechnologyChange: (technology: string) => void;
+  onTechnologyMatchModeChange: (
+    mode: TechnologyMatchMode
+  ) => void;
   onDifficultyChange: (value: string) => void;
   onSortChange: (value: SortOption) => void;
 
@@ -45,6 +50,7 @@ export default function FilterPanel({
   selectedTechnologies,
   selectedDifficulty,
   sortOption,
+  technologyMatchMode,
 
   domains,
   technologies,
@@ -52,6 +58,7 @@ export default function FilterPanel({
   onSearchChange,
   onDomainChange,
   onTechnologyChange,
+  onTechnologyMatchModeChange,
   onDifficultyChange,
   onSortChange,
 
@@ -240,30 +247,23 @@ export default function FilterPanel({
               outline-none
               transition-all
               duration-150
-
               hover:border-gray-400
-
               focus:border-gray-900
               focus:ring-2
               focus:ring-gray-900/10
-
               dark:border-gray-700
               dark:bg-gray-950
               dark:text-gray-100
-
               dark:hover:border-gray-600
               dark:hover:bg-gray-900
-
               dark:focus:border-gray-500
               dark:focus:bg-gray-950
               dark:focus:ring-gray-400/20
-
               sm:h-10
             "
           >
             <span className="truncate">
-              {selectedTechnologies.length ===
-              0
+              {selectedTechnologies.length === 0
                 ? "All technologies"
                 : `${selectedTechnologies.length} selected`}
             </span>
@@ -303,18 +303,15 @@ export default function FilterPanel({
                 border-gray-200
                 bg-white
                 shadow-xl
-
                 dark:border-gray-700
                 dark:bg-gray-900
                 dark:shadow-black/40
-
                 sm:left-auto
                 sm:w-105
-
                 max-sm:max-w-[calc(100vw-2rem)]
               "
             >
-              {/* Search technology */}
+              {/* SEARCH TECHNOLOGY */}
 
               <div
                 className="
@@ -345,23 +342,136 @@ export default function FilterPanel({
                     text-sm
                     text-gray-900
                     outline-none
-
                     focus:border-gray-900
                     focus:ring-2
                     focus:ring-gray-900/10
-
                     dark:border-gray-700
                     dark:bg-gray-950
                     dark:text-gray-100
-
                     dark:focus:border-gray-500
-                    dark:focus:bg-gray-950
                     dark:focus:ring-gray-400/20
                   "
                 />
               </div>
 
-              {/* Technology list */}
+              {/* MATCH MODE */}
+
+              <div
+                className="
+                  border-b
+                  border-gray-100
+                  p-3
+                  dark:border-gray-800
+                "
+              >
+                <p
+                  className="
+                    mb-2
+                    text-xs
+                    font-semibold
+                    uppercase
+                    tracking-wide
+                    text-gray-500
+                    dark:text-gray-400
+                  "
+                >
+                  Match projects
+                </p>
+
+                <div
+                  className="
+                    grid
+                    grid-cols-2
+                    gap-2
+                  "
+                >
+                  <button
+                    type="button"
+                    onClick={() =>
+                      onTechnologyMatchModeChange(
+                        "any"
+                      )
+                    }
+                    className={cn(
+                      `
+                        rounded-lg
+                        border
+                        px-3
+                        py-2
+                        text-sm
+                        font-medium
+                        transition-colors
+                      `,
+                      technologyMatchMode ===
+                        "any"
+                        ? `
+                          border-gray-900
+                          bg-gray-900
+                          text-white
+                          dark:border-white
+                          dark:bg-white
+                          dark:text-gray-900
+                        `
+                        : `
+                          border-gray-200
+                          bg-gray-50
+                          text-gray-700
+                          hover:bg-gray-100
+                          dark:border-gray-700
+                          dark:bg-gray-950
+                          dark:text-gray-300
+                          dark:hover:bg-gray-800
+                        `
+                    )}
+                  >
+                    Any
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      onTechnologyMatchModeChange(
+                        "all"
+                      )
+                    }
+                    className={cn(
+                      `
+                        rounded-lg
+                        border
+                        px-3
+                        py-2
+                        text-sm
+                        font-medium
+                        transition-colors
+                      `,
+                      technologyMatchMode ===
+                        "all"
+                        ? `
+                          border-gray-900
+                          bg-gray-900
+                          text-white
+                          dark:border-white
+                          dark:bg-white
+                          dark:text-gray-900
+                        `
+                        : `
+                          border-gray-200
+                          bg-gray-50
+                          text-gray-700
+                          hover:bg-gray-100
+                          dark:border-gray-700
+                          dark:bg-gray-950
+                          dark:text-gray-300
+                          dark:hover:bg-gray-800
+                        `
+                    )}
+                  >
+                    All
+                  </button>
+                </div>
+              </div>
+
+              {/* TECHNOLOGY LIST */}
 
               <div
                 className="
@@ -407,19 +517,17 @@ export default function FilterPanel({
                               `,
                               isSelected
                                 ? `
-                                    bg-gray-100
-                                    text-gray-900
-
-                                    dark:bg-gray-800
-                                    dark:text-white
-                                  `
+                                  bg-gray-100
+                                  text-gray-900
+                                  dark:bg-gray-800
+                                  dark:text-white
+                                `
                                 : `
-                                    text-gray-700
-                                    hover:bg-gray-50
-
-                                    dark:text-gray-300
-                                    dark:hover:bg-gray-800
-                                  `
+                                  text-gray-700
+                                  hover:bg-gray-50
+                                  dark:text-gray-300
+                                  dark:hover:bg-gray-800
+                                `
                             )}
                           >
                             <input
@@ -437,7 +545,6 @@ export default function FilterPanel({
                                 rounded
                                 border-gray-300
                                 accent-gray-900
-
                                 dark:border-gray-600
                                 dark:accent-white
                               "
@@ -459,7 +566,6 @@ export default function FilterPanel({
                       text-center
                       text-sm
                       text-gray-500
-
                       dark:text-gray-400
                     "
                   >
@@ -468,7 +574,7 @@ export default function FilterPanel({
                 )}
               </div>
 
-              {/* Dropdown footer */}
+              {/* DROPDOWN FOOTER */}
 
               <div
                 className="
@@ -479,7 +585,6 @@ export default function FilterPanel({
                   border-gray-100
                   px-3
                   py-2.5
-
                   dark:border-gray-800
                 "
               >
@@ -490,9 +595,7 @@ export default function FilterPanel({
                     dark:text-gray-400
                   "
                 >
-                  {
-                    selectedTechnologies.length
-                  }{" "}
+                  {selectedTechnologies.length}{" "}
                   selected
                 </span>
 
@@ -507,7 +610,6 @@ export default function FilterPanel({
                       font-medium
                       text-gray-600
                       hover:text-gray-900
-
                       dark:text-gray-400
                       dark:hover:text-white
                     "

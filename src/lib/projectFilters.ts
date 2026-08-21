@@ -1,7 +1,4 @@
-import {
-  projects,
-  type Project,
-} from "@/data/projects";
+import { projects, type Project } from "@/data/projects";
 
 export type SortOption =
   | "relevance"
@@ -10,6 +7,10 @@ export type SortOption =
   | "date-desc"
   | "name-asc"
   | "name-desc";
+
+export type TechnologyMatchMode =
+  | "any"
+  | "all";
 
 export const DIFFICULTIES = [
   "All",
@@ -45,6 +46,7 @@ export type ProjectFilterState = {
   selectedTechnologies: string[];
   selectedDifficulty: string;
   sortOption: SortOption;
+  technologyMatchMode: TechnologyMatchMode;
 };
 
 /* ========================================
@@ -89,8 +91,7 @@ export function getUniqueTechnologies(): string[] {
   return Array.from(
     new Set(
       projects.flatMap(
-        (project) =>
-          project.technologies
+        (project) => project.technologies
       )
     )
   ).sort();
@@ -109,48 +110,80 @@ export function filterProjects(
       .toLowerCase()
       .trim();
 
+  /*
+   * Split the search into individual words.
+   *
+   * Example:
+   * "react typescript"
+   *
+   * becomes:
+   * ["react", "typescript"]
+   */
+
+  const searchTerms = query
+    ? query.split(/\s+/)
+    : [];
+
   return items.filter((project) => {
-    /* SEARCH */
+    /* ========================================
+       SEARCH
+    ======================================== */
+
+    const searchableText = [
+      project.name,
+      project.description,
+      project.domain,
+      ...project.technologies,
+    ]
+      .join(" ")
+      .toLowerCase();
+
+    /*
+     * Every search term must exist somewhere
+     * in the project information.
+     */
 
     const matchesSearch =
-      !query ||
-      project.name
-        .toLowerCase()
-        .includes(query) ||
-      project.description
-        .toLowerCase()
-        .includes(query) ||
-      project.domain
-        .toLowerCase()
-        .includes(query) ||
-      project.technologies.some(
-        (technology) =>
-          technology
-            .toLowerCase()
-            .includes(query)
+      searchTerms.length === 0 ||
+      searchTerms.every((term) =>
+        searchableText.includes(term)
       );
 
-    /* DOMAIN */
+    /* ========================================
+       DOMAIN
+    ======================================== */
 
     const matchesDomain =
-      filters.selectedDomain ===
-        "All" ||
+      filters.selectedDomain === "All" ||
       project.domain ===
         filters.selectedDomain;
 
-    /* TECHNOLOGY */
+    /* ========================================
+       TECHNOLOGY
+    ======================================== */
 
     const matchesTechnology =
       filters.selectedTechnologies
-        .length === 0 ||
-      filters.selectedTechnologies.some(
-        (technology) =>
-          project.technologies.includes(
-            technology
+        .length === 0
+        ? true
+        : filters.technologyMatchMode ===
+          "all"
+        ? filters.selectedTechnologies.every(
+            (technology) =>
+              project.technologies.includes(
+                technology
+              )
           )
-      );
+        : filters.selectedTechnologies.some(
+            (technology) =>
+              project.technologies.includes(
+                technology
+              )
+          );
 
-    /* DIFFICULTY */
+    /* ========================================
+       DIFFICULTY
+    ======================================== */
 
     const matchesDifficulty =
       filters.selectedDifficulty ===
@@ -173,11 +206,148 @@ export function filterProjects(
 
 export function sortProjects(
   items: Project[],
-  sortOption: SortOption
+  sortOption: SortOption,
+  searchQuery: string = ""
 ): Project[] {
+  /* ========================================
+     RELEVANCE
+  ======================================== */
+
   if (sortOption === "relevance") {
-    return items;
+    const query =
+      searchQuery
+        .toLowerCase()
+        .trim();
+
+    /*
+     * If there is no search query,
+     * preserve the original order.
+     */
+
+    if (!query) {
+      return items;
+    }
+
+    const searchTerms =
+      query.split(/\s+/);
+
+    const getRelevanceScore = (
+      project: Project
+    ): number => {
+      let score = 0;
+
+      const name =
+        project.name.toLowerCase();
+
+      const description =
+        project.description.toLowerCase();
+
+      const domain =
+        project.domain.toLowerCase();
+
+      const technologies =
+        project.technologies.map(
+          (technology) =>
+            technology.toLowerCase()
+        );
+
+      /*
+       * Exact project name
+       */
+
+      if (name === query) {
+        score += 100;
+      }
+
+      /*
+       * Project name contains
+       * the complete query.
+       */
+
+      else if (name.includes(query)) {
+        score += 50;
+      }
+
+      /*
+       * Score every individual
+       * search term.
+       */
+
+      for (const term of searchTerms) {
+        /*
+         * Name match
+         */
+
+        if (name.includes(term)) {
+          score += 20;
+        }
+
+        /*
+         * Technology match
+         */
+
+        if (
+          technologies.some(
+            (technology) =>
+              technology.includes(term)
+          )
+        ) {
+          score += 15;
+        }
+
+        /*
+         * Domain match
+         */
+
+        if (
+          domain.includes(term)
+        ) {
+          score += 10;
+        }
+
+        /*
+         * Description match
+         */
+
+        if (
+          description.includes(term)
+        ) {
+          score += 5;
+        }
+      }
+
+      return score;
+    };
+
+    return [...items].sort(
+      (a, b) => {
+        const scoreA =
+          getRelevanceScore(a);
+
+        const scoreB =
+          getRelevanceScore(b);
+
+        /*
+         * Higher relevance first.
+         */
+
+        if (scoreA !== scoreB) {
+          return scoreB - scoreA;
+        }
+
+        /*
+         * If relevance is equal,
+         * use stars as a tie-breaker.
+         */
+
+        return b.stars - a.stars;
+      }
+    );
   }
+
+  /* ========================================
+     OTHER SORT OPTIONS
+  ======================================== */
 
   return [...items].sort(
     (a, b) => {
@@ -238,8 +408,7 @@ export function countActiveFilters(
   }
 
   count +=
-    filters.selectedTechnologies
-      .length;
+    filters.selectedTechnologies.length;
 
   if (
     filters.selectedDifficulty !==
@@ -296,7 +465,9 @@ export function buildProjectSearchParams(
       currentParams.toString()
     );
 
-  /* SEARCH */
+  /* ========================================
+     SEARCH
+  ======================================== */
 
   if (
     updates.search !== undefined
@@ -313,7 +484,9 @@ export function buildProjectSearchParams(
     }
   }
 
-  /* DOMAIN */
+  /* ========================================
+     DOMAIN
+  ======================================== */
 
   if (
     updates.domain !== undefined
@@ -331,7 +504,9 @@ export function buildProjectSearchParams(
     }
   }
 
-  /* TECHNOLOGIES */
+  /* ========================================
+     TECHNOLOGIES
+  ======================================== */
 
   if (
     updates.technologies !==
@@ -351,7 +526,9 @@ export function buildProjectSearchParams(
     );
   }
 
-  /* DIFFICULTY */
+  /* ========================================
+     DIFFICULTY
+  ======================================== */
 
   if (
     updates.difficulty !==
@@ -373,7 +550,9 @@ export function buildProjectSearchParams(
     }
   }
 
-  /* SORT */
+  /* ========================================
+     SORT
+  ======================================== */
 
   if (
     updates.sort !== undefined

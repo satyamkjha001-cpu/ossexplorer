@@ -5,7 +5,6 @@ import { useEffect, useRef } from "react";
 import ActiveFilterChips from "@/components/project/ActiveFilterChips";
 import FilterPanel from "@/components/project/FilterPanel";
 import ProjectGrid from "@/components/project/ProjectGrid";
-
 import Button from "@/components/ui/Button";
 import EmptyState from "@/components/ui/EmptyState";
 import { ProjectsPageSkeleton } from "@/components/ui/Loading";
@@ -31,6 +30,7 @@ export default function ProjectsContent() {
     handleSearchChange,
     handleDomainChange,
     handleTechnologyChange,
+    handleTechnologyMatchModeChange,
     handleDifficultyChange,
     handleSortChange,
 
@@ -63,7 +63,6 @@ export default function ProjectsContent() {
         !event.ctrlKey
       ) {
         event.preventDefault();
-
         searchInputRef.current?.focus();
       }
     };
@@ -101,6 +100,7 @@ export default function ProjectsContent() {
     `${filters.searchQuery}-` +
     `${filters.selectedDomain}-` +
     `${filters.selectedTechnologies.join(",")}-` +
+    `${filters.technologyMatchMode}-` +
     `${filters.selectedDifficulty}-` +
     `${filters.sortOption}`;
 
@@ -112,7 +112,6 @@ export default function ProjectsContent() {
         text-gray-900
         transition-colors
         duration-200
-
         dark:bg-gray-950
         dark:text-gray-100
       "
@@ -123,7 +122,6 @@ export default function ProjectsContent() {
           max-w-7xl
           px-4
           py-10
-
           sm:px-6
           sm:py-12
         "
@@ -153,9 +151,7 @@ export default function ProjectsContent() {
             px-4
             py-3
             backdrop-blur-md
-
             dark:bg-gray-950/95
-
             sm:-mx-6
             sm:px-6
           "
@@ -168,10 +164,8 @@ export default function ProjectsContent() {
               bg-white
               p-3
               shadow-sm
-
               dark:border-gray-800
               dark:bg-gray-900
-
               sm:p-4
             "
           >
@@ -186,6 +180,9 @@ export default function ProjectsContent() {
               }
               selectedTechnologies={
                 filters.selectedTechnologies
+              }
+              technologyMatchMode={
+                filters.technologyMatchMode
               }
               selectedDifficulty={
                 filters.selectedDifficulty
@@ -203,6 +200,9 @@ export default function ProjectsContent() {
               }
               onTechnologyChange={
                 handleTechnologyChange
+              }
+              onTechnologyMatchModeChange={
+                handleTechnologyMatchModeChange
               }
               onDifficultyChange={
                 handleDifficultyChange
@@ -265,9 +265,7 @@ export default function ProjectsContent() {
               hidden
               text-xs
               text-gray-400
-
               dark:text-gray-500
-
               sm:block
             "
           >
@@ -281,7 +279,6 @@ export default function ProjectsContent() {
                 py-0.5
                 font-mono
                 text-[10px]
-
                 dark:border-gray-600
               "
             >
@@ -300,7 +297,6 @@ export default function ProjectsContent() {
             className="
               text-sm
               text-gray-500
-
               dark:text-gray-400
             "
           >
@@ -308,7 +304,6 @@ export default function ProjectsContent() {
               className="
                 font-semibold
                 text-gray-900
-
                 dark:text-white
               "
             >
@@ -322,7 +317,6 @@ export default function ProjectsContent() {
               <span
                 className="
                   text-gray-400
-
                   dark:text-gray-500
                 "
               >
@@ -383,10 +377,20 @@ export default function ProjectsContent() {
               motion-safe:animate-fade-in
             "
             icon="🔍"
-            title="No projects found"
-            description="We couldn't find any projects matching your current search and filters. Try removing a filter or broadening your search."
+            title={
+              filters.searchQuery.trim()
+                ? "No projects found"
+                : "No matching projects"
+            }
+            description={
+              filters.searchQuery.trim()
+                ? `No projects matched "${filters.searchQuery.trim()}". Try a different search term or remove some filters.`
+                : "No projects match your current filters. Try removing a filter or changing your selection."
+            }
             action={{
-              label: "Clear all filters",
+              label: filtersActive
+                ? "Clear all filters"
+                : "Browse all projects",
               onClick: clearFilters,
             }}
           />

@@ -27,6 +27,7 @@ import {
   sortProjects,
   type ProjectFilterState,
   type SortOption,
+  type TechnologyMatchMode,
 } from "@/lib/projectFilters";
 
 export const PROJECTS_PER_PAGE = 10;
@@ -43,6 +44,7 @@ export function useProjectFilters() {
       selectedTechnologies: [],
       selectedDifficulty: "All",
       sortOption: "relevance",
+      technologyMatchMode: "any",
     });
 
   const [visibleCount, setVisibleCount] =
@@ -81,11 +83,11 @@ export function useProjectFilters() {
       sortOption: parseSortOption(
         searchParams.get("sort")
       ),
+
+      technologyMatchMode: "any",
     });
 
-    setVisibleCount(
-      PROJECTS_PER_PAGE
-    );
+    setVisibleCount(PROJECTS_PER_PAGE);
 
     setFiltersInitialized(true);
   }, [searchParams]);
@@ -148,8 +150,7 @@ export function useProjectFilters() {
 
     const timeout = setTimeout(() => {
       pushParams({
-        search:
-          filters.searchQuery,
+        search: filters.searchQuery,
       });
     }, 500);
 
@@ -264,6 +265,19 @@ export function useProjectFilters() {
   };
 
   /* ========================================
+     TECHNOLOGY MATCH MODE
+  ======================================== */
+
+  const handleTechnologyMatchModeChange = (
+    mode: TechnologyMatchMode
+  ) => {
+    updateFilter(
+      "technologyMatchMode",
+      mode
+    );
+  };
+
+  /* ========================================
      DIFFICULTY
   ======================================== */
 
@@ -328,6 +342,7 @@ export function useProjectFilters() {
       selectedTechnologies: [],
       selectedDifficulty: "All",
       sortOption: "relevance",
+      technologyMatchMode: "any",
     });
 
     resetPagination();
@@ -429,14 +444,10 @@ export function useProjectFilters() {
   ======================================== */
 
   const activeFilterCount =
-    countActiveFilters(
-      filters
-    );
+    countActiveFilters(filters);
 
   const filtersActive =
-    hasActiveFilters(
-      filters
-    );
+    hasActiveFilters(filters);
 
   /* ========================================
      RETURN
@@ -458,15 +469,16 @@ export function useProjectFilters() {
 
     handleSearchChange,
     handleDomainChange,
+
     handleTechnologyChange,
+    handleTechnologyMatchModeChange,
+
     handleDifficultyChange,
     handleSortChange,
 
     removeTechnology,
-
     clearFilters,
     clearSearch,
-
     loadMore,
   };
 }
