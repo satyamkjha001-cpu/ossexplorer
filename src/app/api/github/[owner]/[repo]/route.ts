@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import {
+  getGitHubLanguages,
   getGitHubReadme,
   getGitHubRepository,
 } from "@/lib/github";
@@ -17,7 +18,8 @@ export async function GET(
   context: RouteContext
 ) {
   try {
-    const { owner, repo } = await context.params;
+    const { owner, repo } =
+      await context.params;
 
     if (!owner || !repo) {
       return NextResponse.json(
@@ -36,11 +38,15 @@ export async function GET(
         owner
       )}/${encodeURIComponent(repo)}`;
 
-    const [repository, readme] =
-      await Promise.all([
-        getGitHubRepository(githubUrl),
-        getGitHubReadme(githubUrl),
-      ]);
+    const [
+      repository,
+      readme,
+      languages,
+    ] = await Promise.all([
+      getGitHubRepository(githubUrl),
+      getGitHubReadme(githubUrl),
+      getGitHubLanguages(githubUrl),
+    ]);
 
     if (!repository && !readme) {
       return NextResponse.json(
@@ -58,9 +64,11 @@ export async function GET(
       {
         repository,
         readme,
+        languages,
       },
       {
         status: 200,
+
         headers: {
           "Cache-Control":
             "public, s-maxage=3600, stale-while-revalidate=86400",

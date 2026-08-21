@@ -71,12 +71,22 @@ export type GitHubRepository = {
 
 export type GitHubReadme = {
   name: string;
+
   path: string;
+
   html_url: string;
+
   download_url: string | null;
+
   content: string;
+
   encoding: string;
 };
+
+export type GitHubLanguages = Record<
+  string,
+  number
+>;
 
 /* ========================================
    EXTRACT OWNER + REPOSITORY
@@ -144,6 +154,7 @@ export async function getGitHubRepository(
     )}/${encodeURIComponent(parsed.repo)}`,
     {
       headers: githubHeaders,
+
       next: {
         revalidate: 3600,
       },
@@ -194,4 +205,38 @@ export async function getGitHubReadme(
   }
 
   return response.text();
+}
+
+/* ========================================
+   GET LANGUAGES
+======================================== */
+
+export async function getGitHubLanguages(
+  githubUrl: string
+): Promise<GitHubLanguages | null> {
+  const parsed =
+    parseGitHubUrl(githubUrl);
+
+  if (!parsed) {
+    return null;
+  }
+
+  const response = await fetch(
+    `https://api.github.com/repos/${encodeURIComponent(
+      parsed.owner
+    )}/${encodeURIComponent(parsed.repo)}/languages`,
+    {
+      headers: githubHeaders,
+
+      next: {
+        revalidate: 3600,
+      },
+    }
+  );
+
+  if (!response.ok) {
+    return null;
+  }
+
+  return response.json();
 }

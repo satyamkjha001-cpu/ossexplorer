@@ -37,6 +37,8 @@ import ExplorerGuide from "@/components/project/ExplorerGuide";
 
 import GitHubCTA from "@/components/project/GitHubCTA";
 
+import LanguageBreakdown from "@/components/project/LanguageBreakdown";
+
 type ProjectDetailsProps = {
   project: Project;
 };
@@ -143,13 +145,14 @@ const ProjectDetails = ({
     `/projects/${project.id}`;
 
   const {
-    repository,
-    readme,
-    loading,
-    error,
-  } = useGitHubProject(
-    project.githubUrl
-  );
+        repository,
+        readme,
+        languages,
+        loading,
+        error,
+      } = useGitHubProject(
+        project.githubUrl
+      );
 
 
 
@@ -725,6 +728,12 @@ const ProjectDetails = ({
           <TechnologyStack
             technologies={project.technologies}
           />
+
+          {!loading && (
+              <LanguageBreakdown
+                languages={languages}
+              />
+            )}
       {/* ========================================
             PROJECT PROFILE
         ======================================== */}

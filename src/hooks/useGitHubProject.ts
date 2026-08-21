@@ -6,17 +6,20 @@ import {
 } from "react";
 
 import type {
+  GitHubLanguages,
   GitHubRepository,
 } from "@/lib/github";
 
 type GitHubProjectResponse = {
   repository: GitHubRepository | null;
   readme: string | null;
+  languages: GitHubLanguages | null;
 };
 
 type UseGitHubProjectResult = {
   repository: GitHubRepository | null;
   readme: string | null;
+  languages: GitHubLanguages | null;
   loading: boolean;
   error: string | null;
 };
@@ -70,6 +73,13 @@ export function useGitHubProject(
   ] = useState<string | null>(null);
 
   const [
+    languages,
+    setLanguages,
+  ] = useState<GitHubLanguages | null>(
+    null
+  );
+
+  const [
     loading,
     setLoading,
   ] = useState(true);
@@ -93,9 +103,12 @@ export function useGitHubProject(
       if (!parsed) {
         setRepository(null);
         setReadme(null);
+        setLanguages(null);
+
         setError(
           "Invalid GitHub repository URL."
         );
+
         setLoading(false);
 
         return;
@@ -130,6 +143,10 @@ export function useGitHubProject(
 
         setReadme(data.readme);
 
+        setLanguages(
+          data.languages
+        );
+
         if (
           !data.repository &&
           !data.readme
@@ -153,6 +170,7 @@ export function useGitHubProject(
 
         setRepository(null);
         setReadme(null);
+        setLanguages(null);
 
         setError(
           "Unable to load GitHub repository information."
@@ -176,6 +194,7 @@ export function useGitHubProject(
   return {
     repository,
     readme,
+    languages,
     loading,
     error,
   };
