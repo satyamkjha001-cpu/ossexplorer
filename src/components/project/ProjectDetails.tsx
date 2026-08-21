@@ -2,6 +2,7 @@
 
 import BookmarkButton from "@/components/project/BookmarkButton";
 import DifficultyBadge from "@/components/project/DifficultyBadge";
+import ReadmeRenderer from "@/components/project/ReadmeRenderer";
 import ShareButton from "@/components/project/ShareButton";
 import StarCount from "@/components/project/StarCount";
 import TechnologyTags from "@/components/project/TechnologyTags";
@@ -19,10 +20,20 @@ type ProjectDetailsProps = {
   project: Project;
 };
 
+/* ========================================
+   FORMAT GITHUB DATE
+======================================== */
+
 function formatGitHubDate(
   date: string | null
 ) {
   if (!date) {
+    return "Unknown";
+  }
+
+  const parsedDate = new Date(date);
+
+  if (Number.isNaN(parsedDate.getTime())) {
     return "Unknown";
   }
 
@@ -33,104 +44,76 @@ function formatGitHubDate(
       month: "short",
       day: "numeric",
     }
-  ).format(new Date(date));
+  ).format(parsedDate);
 }
 
-function formatNumber(
-  value: number
-) {
-  return new Intl.NumberFormat(
-    "en-US",
-    {
-      notation: "compact",
-      maximumFractionDigits: 1,
-    }
-  ).format(value);
+/* ========================================
+   FORMAT NUMBER
+======================================== */
+
+function formatNumber(value: number) {
+  return new Intl.NumberFormat("en-US", {
+    notation: "compact",
+    maximumFractionDigits: 1,
+  }).format(value);
 }
 
-function ReadmeSection({
-  readme,
-}: {
-  readme: string | null;
-}) {
-  if (!readme) {
-    return (
-      <div
-        className="
-          rounded-xl
-          border
-          border-dashed
-          border-gray-300
-          p-6
-          text-sm
-          text-gray-500
-          dark:border-gray-700
-          dark:text-gray-400
-        "
-      >
-        README information is not
-        available for this repository.
-      </div>
-    );
-  }
+/* ========================================
+   LOADING SKELETON
+======================================== */
 
+function GitHubLoading() {
   return (
-    <details
-      className="
-        group
-        rounded-xl
-        border
-        border-gray-200
-        dark:border-gray-800
-      "
+    <Card
+      padding="lg"
+      className="rounded-2xl"
     >
-      <summary
-        className="
-          cursor-pointer
-          list-none
-          px-5
-          py-4
-          font-semibold
-          text-gray-900
-          dark:text-white
-        "
-      >
-        <span className="group-open:hidden">
-          Read repository README
-        </span>
+      <div className="animate-pulse space-y-6">
+        <div>
+          <div className="h-3 w-32 rounded bg-gray-200 dark:bg-gray-800" />
 
-        <span className="hidden group-open:inline">
-          Hide repository README
-        </span>
-      </summary>
+          <div className="mt-3 h-8 w-64 rounded bg-gray-200 dark:bg-gray-800" />
+        </div>
 
-      <div
-        className="
-          border-t
-          border-gray-200
-          p-5
-          dark:border-gray-800
-        "
-      >
-        <pre
-          className="
-            max-h-[700px]
-            overflow-auto
-            whitespace-pre-wrap
-            break-words
-            font-sans
-            text-sm
-            leading-7
-            text-gray-600
-            dark:text-gray-300
-          "
-        >
-          {readme}
-        </pre>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {Array.from({
+            length: 4,
+          }).map((_, index) => (
+            <div
+              key={index}
+              className="
+                h-24
+                rounded-xl
+                bg-gray-200
+                dark:bg-gray-800
+              "
+            />
+          ))}
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          {Array.from({
+            length: 4,
+          }).map((_, index) => (
+            <div
+              key={index}
+              className="
+                h-5
+                rounded
+                bg-gray-200
+                dark:bg-gray-800
+              "
+            />
+          ))}
+        </div>
       </div>
-    </details>
+    </Card>
   );
 }
+
+/* ========================================
+   COMPONENT
+======================================== */
 
 const ProjectDetails = ({
   project,
@@ -176,6 +159,8 @@ const ProjectDetails = ({
         >
           <div className="min-w-0 flex-1">
 
+            {/* Project labels */}
+
             <div
               className="
                 flex
@@ -215,6 +200,8 @@ const ProjectDetails = ({
               )}
             </div>
 
+            {/* Project name */}
+
             <h1
               className="
                 mt-5
@@ -232,6 +219,8 @@ const ProjectDetails = ({
               {project.name}
             </h1>
 
+            {/* GitHub description */}
+
             <p
               className="
                 mt-5
@@ -246,7 +235,27 @@ const ProjectDetails = ({
               {repository?.description ||
                 project.description}
             </p>
+
+            {/* Repository name */}
+
+            {repository && (
+              <p
+                className="
+                  mt-4
+                  break-all
+                  text-sm
+                  font-medium
+                  text-gray-500
+                  dark:text-gray-400
+                "
+              >
+                github.com/
+                {repository.full_name}
+              </p>
+            )}
           </div>
+
+          {/* Difficulty */}
 
           <div className="shrink-0">
             <DifficultyBadge
@@ -257,7 +266,7 @@ const ProjectDetails = ({
           </div>
         </div>
 
-        {/* Actions */}
+        {/* Hero actions */}
 
         <div
           className="
@@ -315,34 +324,7 @@ const ProjectDetails = ({
           GITHUB LOADING
       ======================================== */}
 
-      {loading && (
-        <Card
-          padding="lg"
-          className="rounded-2xl"
-        >
-          <div className="animate-pulse space-y-4">
-            <div className="h-5 w-40 rounded bg-gray-200 dark:bg-gray-800" />
-
-            <div className="h-8 w-64 rounded bg-gray-200 dark:bg-gray-800" />
-
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              {Array.from({
-                length: 4,
-              }).map((_, index) => (
-                <div
-                  key={index}
-                  className="
-                    h-24
-                    rounded-xl
-                    bg-gray-200
-                    dark:bg-gray-800
-                  "
-                />
-              ))}
-            </div>
-          </div>
-        </Card>
-      )}
+      {loading && <GitHubLoading />}
 
       {/* ========================================
           GITHUB ERROR
@@ -359,21 +341,46 @@ const ProjectDetails = ({
             dark:bg-amber-950/20
           "
         >
-          <h2 className="font-semibold text-gray-900 dark:text-white">
-            GitHub information unavailable
-          </h2>
+          <div className="flex gap-3">
+            <span className="text-xl">
+              ⚠️
+            </span>
 
-          <p className="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-300">
-            We couldn't load live GitHub
-            information right now. The local
-            project information is still
-            available below.
-          </p>
+            <div>
+              <h2 className="font-semibold text-gray-900 dark:text-white">
+                GitHub information unavailable
+              </h2>
+
+              <p className="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-300">
+                We couldn't load live GitHub
+                information right now. The
+                project's local information is
+                still available.
+              </p>
+
+              <a
+                href={project.githubUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="
+                  mt-3
+                  inline-block
+                  text-sm
+                  font-semibold
+                  text-blue-600
+                  hover:underline
+                  dark:text-blue-400
+                "
+              >
+                Open repository directly →
+              </a>
+            </div>
+          </div>
         </Card>
       )}
 
       {/* ========================================
-          LIVE GITHUB STATS
+          LIVE GITHUB REPOSITORY
       ======================================== */}
 
       {!loading && repository && (
@@ -406,6 +413,13 @@ const ProjectDetails = ({
             GitHub repository
           </h2>
 
+          <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+            Information retrieved directly
+            from GitHub.
+          </p>
+
+          {/* Main stats */}
+
           <div
             className="
               mt-6
@@ -429,7 +443,7 @@ const ProjectDetails = ({
               "
             >
               <p className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                Stars
+                ⭐ Stars
               </p>
 
               <p className="mt-2 text-2xl font-bold text-gray-900 dark:text-white">
@@ -453,7 +467,7 @@ const ProjectDetails = ({
               "
             >
               <p className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                Forks
+                🍴 Forks
               </p>
 
               <p className="mt-2 text-2xl font-bold text-gray-900 dark:text-white">
@@ -477,7 +491,7 @@ const ProjectDetails = ({
               "
             >
               <p className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                Open Issues
+                🐛 Open Issues
               </p>
 
               <p className="mt-2 text-2xl font-bold text-gray-900 dark:text-white">
@@ -501,7 +515,7 @@ const ProjectDetails = ({
               "
             >
               <p className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                Primary Language
+                💻 Primary Language
               </p>
 
               <p className="mt-2 text-lg font-bold text-gray-900 dark:text-white">
@@ -517,7 +531,8 @@ const ProjectDetails = ({
             className="
               mt-6
               grid
-              gap-4
+              gap-x-8
+              gap-y-5
               border-t
               border-gray-200
               pt-6
@@ -596,7 +611,15 @@ const ProjectDetails = ({
           {/* Topics */}
 
           {repository.topics.length > 0 && (
-            <div className="mt-6 border-t border-gray-200 pt-6 dark:border-gray-800">
+            <div
+              className="
+                mt-6
+                border-t
+                border-gray-200
+                pt-6
+                dark:border-gray-800
+              "
+            >
               <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
                 Repository Topics
               </p>
@@ -625,11 +648,30 @@ const ProjectDetails = ({
               </div>
             </div>
           )}
+
+          {/* GitHub repository link */}
+
+          <div className="mt-6">
+            <a
+              href={repository.html_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="
+                text-sm
+                font-semibold
+                text-blue-600
+                hover:underline
+                dark:text-blue-400
+              "
+            >
+              View repository on GitHub →
+            </a>
+          </div>
         </Card>
       )}
 
       {/* ========================================
-          ABOUT
+          ABOUT PROJECT
       ======================================== */}
 
       <Card
@@ -662,11 +704,11 @@ const ProjectDetails = ({
           "
         >
           <p className="text-sm leading-7 text-gray-600 dark:text-gray-300">
-            This project is categorized under{" "}
+            This project belongs to the{" "}
             <strong className="text-gray-900 dark:text-white">
               {project.domain}
             </strong>{" "}
-            and is currently classified as{" "}
+            domain and is classified as{" "}
             <strong className="text-gray-900 dark:text-white">
               {project.difficulty}
             </strong>
@@ -684,12 +726,18 @@ const ProjectDetails = ({
         className="rounded-2xl"
       >
         <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-          Stack
+          Technology Stack
         </p>
 
         <h2 className="mt-2 text-2xl font-bold text-gray-900 dark:text-white">
-          Technologies
+          Technologies used
         </h2>
+
+        <p className="mt-3 text-sm leading-6 text-gray-500 dark:text-gray-400">
+          {technologyCount} technologies are
+          currently associated with this
+          project in the Explorer.
+        </p>
 
         <TechnologyTags
           technologies={
@@ -698,6 +746,180 @@ const ProjectDetails = ({
           size="md"
           className="mt-5"
         />
+      </Card>
+
+      {/* ========================================
+          PROJECT PROFILE
+      ======================================== */}
+
+      <Card
+        padding="lg"
+        className="rounded-2xl"
+      >
+        <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+          Project Profile
+        </p>
+
+        <h2 className="mt-2 text-2xl font-bold text-gray-900 dark:text-white">
+          Project information
+        </h2>
+
+        <div
+          className="
+            mt-6
+            divide-y
+            divide-gray-200
+            dark:divide-gray-800
+          "
+        >
+          {/* Domain */}
+
+          <div
+            className="
+              flex
+              flex-col
+              gap-1
+              py-4
+              sm:flex-row
+              sm:items-center
+              sm:justify-between
+            "
+          >
+            <span className="text-sm text-gray-500 dark:text-gray-400">
+              Domain
+            </span>
+
+            <span className="font-semibold text-gray-900 dark:text-white">
+              {project.domain}
+            </span>
+          </div>
+
+          {/* Difficulty */}
+
+          <div
+            className="
+              flex
+              flex-col
+              gap-2
+              py-4
+              sm:flex-row
+              sm:items-center
+              sm:justify-between
+            "
+          >
+            <span className="text-sm text-gray-500 dark:text-gray-400">
+              Difficulty
+            </span>
+
+            <DifficultyBadge
+              difficulty={
+                project.difficulty
+              }
+            />
+          </div>
+
+          {/* Technology count */}
+
+          <div
+            className="
+              flex
+              flex-col
+              gap-1
+              py-4
+              sm:flex-row
+              sm:items-center
+              sm:justify-between
+            "
+          >
+            <span className="text-sm text-gray-500 dark:text-gray-400">
+              Technologies
+            </span>
+
+            <span className="font-semibold text-gray-900 dark:text-white">
+              {technologyCount}
+            </span>
+          </div>
+
+          {/* Beginner */}
+
+          <div
+            className="
+              flex
+              flex-col
+              gap-2
+              py-4
+              sm:flex-row
+              sm:items-center
+              sm:justify-between
+            "
+          >
+            <span className="text-sm text-gray-500 dark:text-gray-400">
+              Beginner friendly
+            </span>
+
+            {project.beginnerFriendly ? (
+              <Badge variant="success">
+                Yes
+              </Badge>
+            ) : (
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                No
+              </span>
+            )}
+          </div>
+
+          {/* Good First Issue */}
+
+          <div
+            className="
+              flex
+              flex-col
+              gap-2
+              py-4
+              sm:flex-row
+              sm:items-center
+              sm:justify-between
+            "
+          >
+            <span className="text-sm text-gray-500 dark:text-gray-400">
+              Good first issue
+            </span>
+
+            {project.goodFirstIssue ? (
+              <Badge variant="info">
+                Available
+              </Badge>
+            ) : (
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Not listed
+              </span>
+            )}
+          </div>
+
+          {/* Added */}
+
+          <div
+            className="
+              flex
+              flex-col
+              gap-1
+              py-4
+              sm:flex-row
+              sm:items-center
+              sm:justify-between
+            "
+          >
+            <span className="text-sm text-gray-500 dark:text-gray-400">
+              Added to Explorer
+            </span>
+
+            <span className="font-semibold text-gray-900 dark:text-white">
+              {formatDateAdded(
+                project.dateAdded
+              )}
+            </span>
+          </div>
+        </div>
       </Card>
 
       {/* ========================================
@@ -716,6 +938,13 @@ const ProjectDetails = ({
           Contribution potential
         </h2>
 
+        <p className="mt-3 max-w-3xl text-sm leading-7 text-gray-500 dark:text-gray-400">
+          These are signals stored in the
+          Explorer dataset. Always verify
+          current GitHub issues and contribution
+          guidelines before contributing.
+        </p>
+
         <div
           className="
             mt-6
@@ -724,6 +953,8 @@ const ProjectDetails = ({
             sm:grid-cols-2
           "
         >
+          {/* Beginner Friendly */}
+
           <div
             className="
               rounded-xl
@@ -741,23 +972,29 @@ const ProjectDetails = ({
 
                 <p className="mt-4 text-sm leading-6 text-gray-600 dark:text-gray-300">
                   This project is marked as
-                  beginner friendly in the
-                  Explorer dataset.
+                  beginner friendly and may be
+                  a reasonable repository to
+                  study while building open
+                  source experience.
                 </p>
               </>
             ) : (
               <>
                 <Badge>
-                  Not Marked Beginner Friendly
+                  Not Beginner Friendly
                 </Badge>
 
                 <p className="mt-4 text-sm leading-6 text-gray-600 dark:text-gray-300">
-                  This project is not currently
-                  marked as beginner friendly.
+                  This project is not marked as
+                  beginner friendly. Understand
+                  the codebase and documentation
+                  before attempting a contribution.
                 </p>
               </>
             )}
           </div>
+
+          {/* Good First Issue */}
 
           <div
             className="
@@ -775,11 +1012,10 @@ const ProjectDetails = ({
                 </Badge>
 
                 <p className="mt-4 text-sm leading-6 text-gray-600 dark:text-gray-300">
-                  The Explorer marks this
-                  repository as having
+                  This project is marked as having
                   good-first-issue opportunities.
-                  Check GitHub for the current
-                  issues.
+                  Check GitHub for the actual
+                  current issues.
                 </p>
               </>
             ) : (
@@ -814,17 +1050,24 @@ const ProjectDetails = ({
           Repository README
         </h2>
 
-        <p className="mt-3 text-sm leading-6 text-gray-500 dark:text-gray-400">
-          This is the README retrieved from
-          the project's GitHub repository.
-          Use it to understand the project,
-          setup instructions, features, and
-          usage documented by the maintainers.
+        <p className="mt-3 max-w-3xl text-sm leading-6 text-gray-500 dark:text-gray-400">
+          This README is retrieved from the
+          project's GitHub repository. It can
+          contain the project's actual purpose,
+          features, installation instructions,
+          usage examples, architecture,
+          contribution instructions, and other
+          documentation provided by its
+          maintainers.
         </p>
 
         <div className="mt-6">
-          <ReadmeSection
-            readme={readme}
+         <ReadmeRenderer
+              readme={readme}
+              githubUrl={project.githubUrl}
+              defaultBranch={
+                repository?.default_branch ?? "main"
+              }
           />
         </div>
       </Card>
@@ -845,9 +1088,28 @@ const ProjectDetails = ({
           How to explore this project
         </h2>
 
-        <ol className="mt-6 space-y-4">
-          <li className="flex gap-4">
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gray-100 text-xs font-bold text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+        <div className="mt-6 space-y-5">
+
+          {/* Step 1 */}
+
+          <div className="flex gap-4">
+            <span
+              className="
+                flex
+                h-8
+                w-8
+                shrink-0
+                items-center
+                justify-center
+                rounded-full
+                bg-gray-100
+                text-xs
+                font-bold
+                text-gray-700
+                dark:bg-gray-800
+                dark:text-gray-300
+              "
+            >
               1
             </span>
 
@@ -857,72 +1119,160 @@ const ProjectDetails = ({
               </h3>
 
               <p className="mt-1 text-sm leading-6 text-gray-600 dark:text-gray-300">
-                Start with the description and
-                README to understand what the
-                project actually does.
+                Read the project description
+                and README before looking at
+                individual files.
               </p>
             </div>
-          </li>
+          </div>
 
-          <li className="flex gap-4">
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gray-100 text-xs font-bold text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+          {/* Step 2 */}
+
+          <div className="flex gap-4">
+            <span
+              className="
+                flex
+                h-8
+                w-8
+                shrink-0
+                items-center
+                justify-center
+                rounded-full
+                bg-gray-100
+                text-xs
+                font-bold
+                text-gray-700
+                dark:bg-gray-800
+                dark:text-gray-300
+              "
+            >
               2
             </span>
 
             <div>
               <h3 className="font-semibold text-gray-900 dark:text-white">
-                Check the technology stack
+                Understand the technology stack
               </h3>
 
               <p className="mt-1 text-sm leading-6 text-gray-600 dark:text-gray-300">
-                Compare the technologies with
-                the skills you already know or
-                want to learn.
+                Identify technologies you already
+                know and the ones you need to learn.
               </p>
             </div>
-          </li>
+          </div>
 
-          <li className="flex gap-4">
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gray-100 text-xs font-bold text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+          {/* Step 3 */}
+
+          <div className="flex gap-4">
+            <span
+              className="
+                flex
+                h-8
+                w-8
+                shrink-0
+                items-center
+                justify-center
+                rounded-full
+                bg-gray-100
+                text-xs
+                font-bold
+                text-gray-700
+                dark:bg-gray-800
+                dark:text-gray-300
+              "
+            >
               3
             </span>
 
             <div>
               <h3 className="font-semibold text-gray-900 dark:text-white">
-                Inspect repository activity
+                Check repository health
               </h3>
 
               <p className="mt-1 text-sm leading-6 text-gray-600 dark:text-gray-300">
-                Check stars, forks, issues, and
-                recent updates before deciding
-                whether the project is worth
-                deeper exploration.
+                Look at stars, forks, issues, and
+                recent repository activity to get
+                context about the project.
               </p>
             </div>
-          </li>
+          </div>
 
-          <li className="flex gap-4">
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gray-100 text-xs font-bold text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+          {/* Step 4 */}
+
+          <div className="flex gap-4">
+            <span
+              className="
+                flex
+                h-8
+                w-8
+                shrink-0
+                items-center
+                justify-center
+                rounded-full
+                bg-gray-100
+                text-xs
+                font-bold
+                text-gray-700
+                dark:bg-gray-800
+                dark:text-gray-300
+              "
+            >
               4
             </span>
 
             <div>
               <h3 className="font-semibold text-gray-900 dark:text-white">
-                Explore the source
+                Read contribution information
               </h3>
 
               <p className="mt-1 text-sm leading-6 text-gray-600 dark:text-gray-300">
-                Open GitHub and inspect the source
-                structure, documentation, issues,
-                and contribution guidelines.
+                Look for CONTRIBUTING files,
+                issue labels, and contribution
+                guidelines in the repository.
               </p>
             </div>
-          </li>
-        </ol>
+          </div>
+
+          {/* Step 5 */}
+
+          <div className="flex gap-4">
+            <span
+              className="
+                flex
+                h-8
+                w-8
+                shrink-0
+                items-center
+                justify-center
+                rounded-full
+                bg-gray-100
+                text-xs
+                font-bold
+                text-gray-700
+                dark:bg-gray-800
+                dark:text-gray-300
+              "
+            >
+              5
+            </span>
+
+            <div>
+              <h3 className="font-semibold text-gray-900 dark:text-white">
+                Explore the source code
+              </h3>
+
+              <p className="mt-1 text-sm leading-6 text-gray-600 dark:text-gray-300">
+                Once you understand the project,
+                open the repository and inspect
+                its structure and implementation.
+              </p>
+            </div>
+          </div>
+        </div>
       </Card>
 
       {/* ========================================
-          FINAL GITHUB CTA
+          GITHUB CTA
       ======================================== */}
 
       <Card
@@ -955,10 +1305,11 @@ const ProjectDetails = ({
             </h2>
 
             <p className="mt-2 max-w-2xl text-sm leading-6 text-gray-400">
-              Open the repository to read the
-              latest documentation, inspect the
-              source code, check issues, and see
-              the current project activity.
+              The Explorer gives you project
+              context. GitHub gives you the
+              actual source code, issues,
+              documentation, and contribution
+              workflow.
             </p>
           </div>
 
@@ -991,6 +1342,7 @@ const ProjectDetails = ({
           flex-col
           gap-3
           sm:flex-row
+          sm:items-center
           sm:justify-between
         "
       >
