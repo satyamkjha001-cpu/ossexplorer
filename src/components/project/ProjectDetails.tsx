@@ -16,6 +16,8 @@ import { formatDateAdded } from "@/lib/format";
 
 import type { Project } from "@/data/projects";
 
+import ProjectOverview from "@/components/project/ProjectOverview";
+
 import {
   getRepositoryInsights,
 } from "@/lib/githubProjectInsights";
@@ -682,65 +684,28 @@ const ProjectDetails = ({
       )}
 
       {/* ========================================
-    REPOSITORY HEALTH
-======================================== */}
+              REPOSITORY HEALTH
+          ======================================== */}
 
-{!loading &&
-  repository &&
-  repositoryInsights && (
-    <RepositoryHealth
-      repository={repository}
-      insights={repositoryInsights}
-    />
-  )}
+          {!loading &&
+            repository &&
+            repositoryInsights && (
+              <RepositoryHealth
+                repository={repository}
+                insights={repositoryInsights}
+              />
+            )}
 
-      {/* ========================================
-          ABOUT PROJECT
-      ======================================== */}
+                {/* ========================================
+              PROJECT OVERVIEW
+          ======================================== */}
 
-      <Card
-        padding="lg"
-        className="rounded-2xl"
-      >
-        <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-          Overview
-        </p>
-
-        <h2 className="mt-2 text-2xl font-bold text-gray-900 dark:text-white">
-          What is {project.name}?
-        </h2>
-
-        <p className="mt-4 max-w-4xl text-sm leading-7 text-gray-600 dark:text-gray-300 sm:text-base">
-          {repository?.description ||
-            project.description}
-        </p>
-
-        <div
-          className="
-            mt-6
-            rounded-xl
-            border
-            border-gray-200
-            bg-gray-50
-            p-5
-            dark:border-gray-800
-            dark:bg-gray-800/50
-          "
-        >
-          <p className="text-sm leading-7 text-gray-600 dark:text-gray-300">
-            This project belongs to the{" "}
-            <strong className="text-gray-900 dark:text-white">
-              {project.domain}
-            </strong>{" "}
-            domain and is classified as{" "}
-            <strong className="text-gray-900 dark:text-white">
-              {project.difficulty}
-            </strong>
-            .
-          </p>
-        </div>
-      </Card>
-
+          <ProjectOverview
+            project={project}
+            repositoryDescription={
+              repository?.description
+            }
+          />
       {/* ========================================
           TECHNOLOGY STACK
       ======================================== */}
