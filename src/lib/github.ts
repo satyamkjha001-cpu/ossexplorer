@@ -89,6 +89,44 @@ export type GitHubLanguages = Record<
 >;
 
 /* ========================================
+   GITHUB COMMIT
+======================================== */
+
+export type GitHubCommit = {
+  sha: string;
+
+  html_url: string;
+
+  commit: {
+    message: string;
+
+    author: {
+      name: string;
+      email: string;
+      date: string;
+    } | null;
+
+    committer: {
+      name: string;
+      email: string;
+      date: string;
+    } | null;
+  };
+
+  author: {
+    login: string;
+    avatar_url: string;
+    html_url: string;
+  } | null;
+
+  committer: {
+    login: string;
+    avatar_url: string;
+    html_url: string;
+  } | null;
+};
+
+/* ========================================
    EXTRACT OWNER + REPOSITORY
 ======================================== */
 
@@ -115,7 +153,10 @@ export function parseGitHubUrl(
 
     return {
       owner: parts[0],
-      repo: parts[1].replace(/\.git$/, ""),
+      repo: parts[1].replace(
+        /\.git$/,
+        ""
+      ),
     };
   } catch {
     return null;
@@ -151,7 +192,9 @@ export async function getGitHubRepository(
   const response = await fetch(
     `https://api.github.com/repos/${encodeURIComponent(
       parsed.owner
-    )}/${encodeURIComponent(parsed.repo)}`,
+    )}/${encodeURIComponent(
+      parsed.repo
+    )}`,
     {
       headers: githubHeaders,
 
@@ -185,7 +228,9 @@ export async function getGitHubReadme(
   const response = await fetch(
     `https://api.github.com/repos/${encodeURIComponent(
       parsed.owner
-    )}/${encodeURIComponent(parsed.repo)}/readme`,
+    )}/${encodeURIComponent(
+      parsed.repo
+    )}/readme`,
     {
       headers: {
         ...githubHeaders,
@@ -224,12 +269,50 @@ export async function getGitHubLanguages(
   const response = await fetch(
     `https://api.github.com/repos/${encodeURIComponent(
       parsed.owner
-    )}/${encodeURIComponent(parsed.repo)}/languages`,
+    )}/${encodeURIComponent(
+      parsed.repo
+    )}/languages`,
     {
       headers: githubHeaders,
 
       next: {
         revalidate: 3600,
+      },
+    }
+  );
+
+  if (!response.ok) {
+    return null;
+  }
+
+  return response.json();
+}
+
+/* ========================================
+   GET RECENT COMMITS
+======================================== */
+
+export async function getGitHubCommits(
+  githubUrl: string
+): Promise<GitHubCommit[] | null> {
+  const parsed =
+    parseGitHubUrl(githubUrl);
+
+  if (!parsed) {
+    return null;
+  }
+
+  const response = await fetch(
+    `https://api.github.com/repos/${encodeURIComponent(
+      parsed.owner
+    )}/${encodeURIComponent(
+      parsed.repo
+    )}/commits?per_page=5`,
+    {
+      headers: githubHeaders,
+
+      next: {
+        revalidate: 1800,
       },
     }
   );

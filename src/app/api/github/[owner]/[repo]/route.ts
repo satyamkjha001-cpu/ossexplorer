@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import {
+  getGitHubCommits,
   getGitHubLanguages,
   getGitHubReadme,
   getGitHubRepository,
@@ -42,13 +43,31 @@ export async function GET(
       repository,
       readme,
       languages,
+      commits,
     ] = await Promise.all([
-      getGitHubRepository(githubUrl),
-      getGitHubReadme(githubUrl),
-      getGitHubLanguages(githubUrl),
+      getGitHubRepository(
+        githubUrl
+      ),
+
+      getGitHubReadme(
+        githubUrl
+      ),
+
+      getGitHubLanguages(
+        githubUrl
+      ),
+
+      getGitHubCommits(
+        githubUrl
+      ),
     ]);
 
-    if (!repository && !readme) {
+    if (
+      !repository &&
+      !readme &&
+      !languages &&
+      !commits
+    ) {
       return NextResponse.json(
         {
           error:
@@ -65,13 +84,14 @@ export async function GET(
         repository,
         readme,
         languages,
+        commits,
       },
       {
         status: 200,
 
         headers: {
           "Cache-Control":
-            "public, s-maxage=3600, stale-while-revalidate=86400",
+            "public, s-maxage=1800, stale-while-revalidate=86400",
         },
       }
     );

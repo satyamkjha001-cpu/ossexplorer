@@ -6,6 +6,7 @@ import {
 } from "react";
 
 import type {
+  GitHubCommit,
   GitHubLanguages,
   GitHubRepository,
 } from "@/lib/github";
@@ -14,12 +15,14 @@ type GitHubProjectResponse = {
   repository: GitHubRepository | null;
   readme: string | null;
   languages: GitHubLanguages | null;
+  commits: GitHubCommit[] | null;
 };
 
 type UseGitHubProjectResult = {
   repository: GitHubRepository | null;
   readme: string | null;
   languages: GitHubLanguages | null;
+  commits: GitHubCommit[] | null;
   loading: boolean;
   error: string | null;
 };
@@ -73,16 +76,23 @@ export function useGitHubProject(
   ] = useState<string | null>(null);
 
   const [
-    languages,
-    setLanguages,
-  ] = useState<GitHubLanguages | null>(
-    null
-  );
+  languages,
+  setLanguages,
+] = useState<GitHubLanguages | null>(
+  null
+);
 
-  const [
-    loading,
-    setLoading,
-  ] = useState(true);
+const [
+  commits,
+  setCommits,
+] = useState<GitHubCommit[] | null>(
+  null
+);
+
+const [
+  loading,
+  setLoading,
+] = useState(true);
 
   const [
     error,
@@ -104,7 +114,7 @@ export function useGitHubProject(
         setRepository(null);
         setReadme(null);
         setLanguages(null);
-
+        setCommits(null);
         setError(
           "Invalid GitHub repository URL."
         );
@@ -192,10 +202,11 @@ export function useGitHubProject(
   }, [githubUrl]);
 
   return {
-    repository,
-    readme,
-    languages,
-    loading,
-    error,
-  };
+  repository,
+  readme,
+  languages,
+  commits,
+  loading,
+  error,
+};
 }
