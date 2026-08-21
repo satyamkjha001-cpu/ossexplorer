@@ -24,6 +24,8 @@ import {
 
 import RepositoryHealth from "@/components/project/RepositoryHealth";
 
+import TechnologyStack from "@/components/project/TechnologyStack";
+
 type ProjectDetailsProps = {
   project: Project;
 };
@@ -138,8 +140,7 @@ const ProjectDetails = ({
     project.githubUrl
   );
 
-  const technologyCount =
-    project.technologies.length;
+
 
   const repositoryInsights =
   repository
@@ -707,36 +708,12 @@ const ProjectDetails = ({
             }
           />
       {/* ========================================
-          TECHNOLOGY STACK
-      ======================================== */}
+              TECHNOLOGY STACK
+          ======================================== */}
 
-      <Card
-        padding="lg"
-        className="rounded-2xl"
-      >
-        <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-          Technology Stack
-        </p>
-
-        <h2 className="mt-2 text-2xl font-bold text-gray-900 dark:text-white">
-          Technologies used
-        </h2>
-
-        <p className="mt-3 text-sm leading-6 text-gray-500 dark:text-gray-400">
-          {technologyCount} technologies are
-          currently associated with this
-          project in the Explorer.
-        </p>
-
-        <TechnologyTags
-          technologies={
-            project.technologies
-          }
-          size="md"
-          className="mt-5"
-        />
-      </Card>
-
+          <TechnologyStack
+            technologies={project.technologies}
+          />
       {/* ========================================
           PROJECT PROFILE
       ======================================== */}
