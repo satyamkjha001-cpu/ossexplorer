@@ -5,11 +5,14 @@ import {
   useState,
 } from "react";
 
-import {
-  getGitHubReadme,
-  getGitHubRepository,
-  type GitHubRepository,
+import type {
+  GitHubRepository,
 } from "@/lib/github";
+
+type GitHubProjectResponse = {
+  repository: GitHubRepository | null;
+  readme: string | null;
+};
 
 type UseGitHubProjectResult = {
   repository: GitHubRepository | null;
@@ -18,59 +21,128 @@ type UseGitHubProjectResult = {
   error: string | null;
 };
 
+function parseGitHubUrl(
+  githubUrl: string
+) {
+  try {
+    const url = new URL(githubUrl);
+
+    if (
+      url.hostname !== "github.com" &&
+      url.hostname !== "www.github.com"
+    ) {
+      return null;
+    }
+
+    const parts = url.pathname
+      .split("/")
+      .filter(Boolean);
+
+    if (parts.length < 2) {
+      return null;
+    }
+
+    return {
+      owner: parts[0],
+      repo: parts[1].replace(
+        /\.git$/,
+        ""
+      ),
+    };
+  } catch {
+    return null;
+  }
+}
+
 export function useGitHubProject(
   githubUrl: string
 ): UseGitHubProjectResult {
-  const [repository, setRepository] =
-    useState<GitHubRepository | null>(null);
+  const [
+    repository,
+    setRepository,
+  ] = useState<GitHubRepository | null>(
+    null
+  );
 
-  const [readme, setReadme] =
-    useState<string | null>(null);
+  const [
+    readme,
+    setReadme,
+  ] = useState<string | null>(null);
 
-  const [loading, setLoading] =
-    useState(true);
+  const [
+    loading,
+    setLoading,
+  ] = useState(true);
 
-  const [error, setError] =
-    useState<string | null>(null);
+  const [
+    error,
+    setError,
+  ] = useState<string | null>(null);
 
   useEffect(() => {
-    let cancelled = false;
+    const controller =
+      new AbortController();
 
     async function loadProject() {
       setLoading(true);
       setError(null);
 
-      try {
-        const [
-          repositoryData,
-          readmeData,
-        ] = await Promise.all([
-          getGitHubRepository(
-            githubUrl
-          ),
-          getGitHubReadme(githubUrl),
-        ]);
+      const parsed =
+        parseGitHubUrl(githubUrl);
 
-        if (cancelled) {
-          return;
+      if (!parsed) {
+        setRepository(null);
+        setReadme(null);
+        setError(
+          "Invalid GitHub repository URL."
+        );
+        setLoading(false);
+
+        return;
+      }
+
+      try {
+        const response =
+          await fetch(
+            `/api/github/${encodeURIComponent(
+              parsed.owner
+            )}/${encodeURIComponent(
+              parsed.repo
+            )}`,
+            {
+              signal:
+                controller.signal,
+            }
+          );
+
+        if (!response.ok) {
+          throw new Error(
+            `GitHub API request failed with status ${response.status}`
+          );
         }
 
+        const data =
+          (await response.json()) as GitHubProjectResponse;
+
         setRepository(
-          repositoryData
+          data.repository
         );
 
-        setReadme(readmeData);
+        setReadme(data.readme);
 
         if (
-          !repositoryData &&
-          !readmeData
+          !data.repository &&
+          !data.readme
         ) {
           setError(
             "Unable to load GitHub repository information."
           );
         }
       } catch (err) {
-        if (cancelled) {
+        if (
+          err instanceof DOMException &&
+          err.name === "AbortError"
+        ) {
           return;
         }
 
@@ -79,11 +151,16 @@ export function useGitHubProject(
           err
         );
 
+        setRepository(null);
+        setReadme(null);
+
         setError(
           "Unable to load GitHub repository information."
         );
       } finally {
-        if (!cancelled) {
+        if (
+          !controller.signal.aborted
+        ) {
           setLoading(false);
         }
       }
@@ -92,7 +169,7 @@ export function useGitHubProject(
     loadProject();
 
     return () => {
-      cancelled = true;
+      controller.abort();
     };
   }, [githubUrl]);
 
