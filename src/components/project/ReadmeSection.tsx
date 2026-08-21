@@ -25,7 +25,7 @@ export default function ReadmeSection({
         Repository README
       </h2>
 
-      <p className="mt-3 max-w-3xl text-sm leading-6 text-gray-500 dark:text-gray-400">
+      <p className="mt-3 text-sm leading-6 text-gray-500 dark:text-gray-400">
         This README is retrieved from the
         project's GitHub repository. It can
         contain the project's actual purpose,

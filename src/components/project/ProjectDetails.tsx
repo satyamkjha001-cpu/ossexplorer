@@ -1,11 +1,20 @@
 "use client";
 
 import BookmarkButton from "@/components/project/BookmarkButton";
+import ContributionGuide from "@/components/project/ContributionGuide";
 import DifficultyBadge from "@/components/project/DifficultyBadge";
-import ReadmeRenderer from "@/components/project/ReadmeRenderer";
+import ExplorerGuide from "@/components/project/ExplorerGuide";
+import GitHubCTA from "@/components/project/GitHubCTA";
+import LanguageBreakdown from "@/components/project/LanguageBreakdown";
+import ProjectOverview from "@/components/project/ProjectOverview";
+import ProjectProfile from "@/components/project/ProjectProfile";
+import ReadmeSection from "@/components/project/ReadmeSection";
+import RepositoryActivity from "@/components/project/RepositoryActivity";
+import RepositoryContributors from "@/components/project/RepositoryContributors";
+import RepositoryHealth from "@/components/project/RepositoryHealth";
+import RepositoryReleases from "@/components/project/RepositoryReleases";
 import ShareButton from "@/components/project/ShareButton";
-import StarCount from "@/components/project/StarCount";
-
+import TechnologyStack from "@/components/project/TechnologyStack";
 import TechnologyTags from "@/components/project/TechnologyTags";
 
 import Badge from "@/components/ui/Badge";
@@ -13,46 +22,15 @@ import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 
 import { useGitHubProject } from "@/hooks/useGitHubProject";
-import { formatDateAdded } from "@/lib/format";
+import { getRepositoryInsights } from "@/lib/githubProjectInsights";
 
 import type { Project } from "@/data/projects";
-
-import ProjectOverview from "@/components/project/ProjectOverview";
-
-import {
-  getRepositoryInsights,
-} from "@/lib/githubProjectInsights";
-
-import RepositoryHealth from "@/components/project/RepositoryHealth";
-
-import TechnologyStack from "@/components/project/TechnologyStack";
-
-import ProjectProfile from "@/components/project/ProjectProfile";
-
-import ContributionGuide from "@/components/project/ContributionGuide";
-
-import ReadmeSection from "@/components/project/ReadmeSection";
-
-import ExplorerGuide from "@/components/project/ExplorerGuide";
-
-import GitHubCTA from "@/components/project/GitHubCTA";
-
-import LanguageBreakdown from "@/components/project/LanguageBreakdown";
-
-
-import RepositoryActivity from "@/components/project/RepositoryActivity";
-
-import RepositoryReleases from "@/components/project/RepositoryReleases";
-
-import RepositoryContributors from "@/components/project/RepositoryContributors";
+import type { GitHubRepository } from "@/lib/github";
+import type { RepositoryInsights } from "@/lib/githubProjectInsights";
 
 type ProjectDetailsProps = {
   project: Project;
 };
-
-/* ========================================
-   FORMAT GITHUB DATE
-======================================== */
 
 function formatGitHubDate(
   date: string | null
@@ -77,20 +55,12 @@ function formatGitHubDate(
   ).format(parsedDate);
 }
 
-/* ========================================
-   FORMAT NUMBER
-======================================== */
-
 function formatNumber(value: number) {
   return new Intl.NumberFormat("en-US", {
     notation: "compact",
     maximumFractionDigits: 1,
   }).format(value);
 }
-
-/* ========================================
-   LOADING SKELETON
-======================================== */
 
 function GitHubLoading() {
   return (
@@ -101,239 +71,508 @@ function GitHubLoading() {
       <div className="animate-pulse space-y-6">
         <div>
           <div className="h-3 w-32 rounded bg-gray-200 dark:bg-gray-800" />
-
           <div className="mt-3 h-8 w-64 rounded bg-gray-200 dark:bg-gray-800" />
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {Array.from({
-            length: 4,
-          }).map((_, index) => (
-            <div
-              key={index}
-              className="
-                h-24
-                rounded-xl
-                bg-gray-200
-                dark:bg-gray-800
-              "
-            />
-          ))}
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-2">
-          {Array.from({
-            length: 4,
-          }).map((_, index) => (
-            <div
-              key={index}
-              className="
-                h-5
-                rounded
-                bg-gray-200
-                dark:bg-gray-800
-              "
-            />
-          ))}
+          {Array.from({ length: 4 }).map(
+            (_, index) => (
+              <div
+                key={index}
+                className="h-24 rounded-xl bg-gray-200 dark:bg-gray-800"
+              />
+            )
+          )}
         </div>
       </div>
     </Card>
   );
 }
 
-/* ========================================
-   COMPONENT
-======================================== */
+type HeroStatProps = {
+  label: string;
+  value: string;
+};
 
-const ProjectDetails = ({
-  project,
-}: ProjectDetailsProps) => {
-  const projectPath =
-    `/projects/${project.id}`;
-
-const {
-  repository,
-  readme,
-  languages,
-  commits,
-  releases,
-  contributors,
-  loading,
-  error,
-} = useGitHubProject(
-  project.githubUrl
-);
-
-
-
-  const repositoryInsights =
-  repository
-    ? getRepositoryInsights(repository)
-    : null;
-
+function HeroStat({
+  label,
+  value,
+}: HeroStatProps) {
   return (
-    <div className="space-y-6">
+    <div
+      className="
+        rounded-xl
+        border
+        border-gray-200
+        bg-gray-50
+        px-4
+        py-3
+        dark:border-gray-800
+        dark:bg-gray-800/50
+      "
+    >
+      <p className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
+        {label}
+      </p>
+      <p className="mt-1 text-lg font-bold text-gray-900 dark:text-white">
+        {value}
+      </p>
+    </div>
+  );
+}
 
-      {/* ========================================
-          HERO
-      ======================================== */}
+type RepositoryMetadataProps = {
+  repository: GitHubRepository;
+};
 
-      <Card
-        padding="lg"
+function RepositoryMetadata({
+  repository,
+}: RepositoryMetadataProps) {
+  return (
+    <Card
+      padding="lg"
+      className="rounded-2xl"
+    >
+      <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+        GitHub Statistics
+      </p>
+
+      <h2 className="mt-2 text-lg font-bold text-gray-900 dark:text-white">
+        Repository details
+      </h2>
+
+      <dl
         className="
-          overflow-hidden
-          rounded-2xl
+          mt-5
+          space-y-4
+          text-sm
         "
       >
-        <div
-          className="
-            flex
-            flex-col
-            gap-6
-            lg:flex-row
-            lg:items-start
-            lg:justify-between
-          "
-        >
-          <div className="min-w-0 flex-1">
+        <div>
+          <dt className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
+            Repository
+          </dt>
+          <dd className="mt-1 break-all font-medium text-gray-900 dark:text-white">
+            {repository.full_name}
+          </dd>
+        </div>
 
-            {/* Project labels */}
+        <div>
+          <dt className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
+            License
+          </dt>
+          <dd className="mt-1 font-medium text-gray-900 dark:text-white">
+            {repository.license?.name ||
+              "Not specified"}
+          </dd>
+        </div>
 
-            <div
-              className="
-                flex
-                flex-wrap
-                items-center
-                gap-2
-              "
-            >
-              <span
-                className="
-                  rounded-full
-                  bg-gray-100
-                  px-3
-                  py-1
-                  text-xs
-                  font-semibold
-                  uppercase
-                  tracking-wide
-                  text-gray-600
-                  dark:bg-gray-800
-                  dark:text-gray-300
-                "
-              >
-                {project.domain}
-              </span>
+        <div>
+          <dt className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
+            Primary language
+          </dt>
+          <dd className="mt-1 font-medium text-gray-900 dark:text-white">
+            {repository.language ||
+              "Not specified"}
+          </dd>
+        </div>
 
-              {project.beginnerFriendly && (
-                <Badge variant="success">
-                  Beginner Friendly
-                </Badge>
-              )}
+        <div>
+          <dt className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
+            Default branch
+          </dt>
+          <dd className="mt-1 font-medium text-gray-900 dark:text-white">
+            {repository.default_branch}
+          </dd>
+        </div>
 
-              {project.goodFirstIssue && (
-                <Badge variant="info">
-                  Good First Issue
-                </Badge>
-              )}
-            </div>
+        <div>
+          <dt className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
+            Created
+          </dt>
+          <dd className="mt-1 font-medium text-gray-900 dark:text-white">
+            {formatGitHubDate(
+              repository.created_at
+            )}
+          </dd>
+        </div>
 
-            {/* Project name */}
+        <div>
+          <dt className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
+            Last updated
+          </dt>
+          <dd className="mt-1 font-medium text-gray-900 dark:text-white">
+            {formatGitHubDate(
+              repository.updated_at
+            )}
+          </dd>
+        </div>
 
-            <h1
-              className="
-                mt-5
-                break-words
-                text-3xl
-                font-bold
-                leading-tight
-                tracking-tight
-                text-gray-900
-                dark:text-white
-                sm:text-4xl
-                lg:text-5xl
-              "
-            >
-              {project.name}
-            </h1>
+        <div>
+          <dt className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
+            Last push
+          </dt>
+          <dd className="mt-1 font-medium text-gray-900 dark:text-white">
+            {formatGitHubDate(
+              repository.pushed_at
+            )}
+          </dd>
+        </div>
+      </dl>
 
-            {/* GitHub description */}
+      {repository.topics.length > 0 && (
+        <div className="mt-6 border-t border-gray-200 pt-5 dark:border-gray-800">
+          <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+            Topics
+          </p>
 
-            <p
-              className="
-                mt-5
-                max-w-3xl
-                text-base
-                leading-8
-                text-gray-600
-                dark:text-gray-300
-                sm:text-lg
-              "
-            >
-              {repository?.description ||
-                project.description}
-            </p>
-
-            {/* Repository name */}
-
-            {repository && (
-              <p
-                className="
-                  mt-4
-                  break-all
-                  text-sm
-                  font-medium
-                  text-gray-500
-                  dark:text-gray-400
-                "
-              >
-                github.com/
-                {repository.full_name}
-              </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {repository.topics.map(
+              (topic) => (
+                <span
+                  key={topic}
+                  className="
+                    rounded-full
+                    bg-gray-100
+                    px-3
+                    py-1.5
+                    text-xs
+                    font-medium
+                    text-gray-700
+                    dark:bg-gray-800
+                    dark:text-gray-300
+                  "
+                >
+                  #{topic}
+                </span>
+              )
             )}
           </div>
+        </div>
+      )}
 
-          {/* Difficulty */}
+      <a
+        href={repository.html_url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="
+          mt-6
+          inline-block
+          text-sm
+          font-semibold
+          text-blue-600
+          hover:underline
+          dark:text-blue-400
+        "
+      >
+        View repository on GitHub →
+      </a>
+    </Card>
+  );
+}
 
-          <div className="shrink-0">
+type QuickActionsProps = {
+  projectId: number;
+  projectPath: string;
+  githubUrl: string;
+};
+
+function QuickActions({
+  projectId,
+  projectPath,
+  githubUrl,
+}: QuickActionsProps) {
+  return (
+    <Card
+      padding="lg"
+      className="rounded-2xl"
+    >
+      <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+        Quick actions
+      </p>
+
+      <div className="mt-4 flex flex-col gap-2">
+        <Button
+          href={githubUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="min-h-11 w-full"
+        >
+          Open on GitHub →
+        </Button>
+
+        <BookmarkButton
+          projectId={projectId}
+        />
+
+        <ShareButton
+          projectPath={projectPath}
+        />
+
+        <Button
+          href="/projects"
+          variant="secondary"
+          className="min-h-11 w-full"
+        >
+          ← Back to Projects
+        </Button>
+      </div>
+    </Card>
+  );
+}
+
+type ProjectHeroProps = {
+  project: Project;
+  projectPath: string;
+  repository: GitHubRepository | null;
+  repositoryInsights: RepositoryInsights | null;
+  loading: boolean;
+  githubUrl: string;
+};
+
+function ProjectHero({
+  project,
+  projectPath,
+  repository,
+  repositoryInsights,
+  loading,
+  githubUrl,
+}: ProjectHeroProps) {
+  const activityVariant =
+    repositoryInsights?.activity ===
+    "active"
+      ? "success"
+      : repositoryInsights?.activity ===
+          "recent"
+        ? "info"
+        : repositoryInsights?.activity ===
+            "stale"
+          ? "warning"
+          : undefined;
+
+  return (
+    <Card
+      padding="lg"
+      className="rounded-2xl"
+    >
+      <div
+        className="
+          flex
+          flex-col
+          gap-8
+          xl:flex-row
+          xl:items-start
+          xl:justify-between
+        "
+      >
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <span
+              className="
+                rounded-full
+                bg-gray-100
+                px-3
+                py-1
+                text-xs
+                font-semibold
+                uppercase
+                tracking-wide
+                text-gray-600
+                dark:bg-gray-800
+                dark:text-gray-300
+              "
+            >
+              {project.domain}
+            </span>
+
             <DifficultyBadge
               difficulty={
                 project.difficulty
               }
+              size="sm"
+            />
+
+            {project.beginnerFriendly && (
+              <Badge variant="success">
+                Beginner Friendly
+              </Badge>
+            )}
+
+            {project.goodFirstIssue && (
+              <Badge variant="info">
+                Good First Issue
+              </Badge>
+            )}
+
+            {repositoryInsights && (
+              <Badge
+                variant={activityVariant}
+              >
+                {
+                  repositoryInsights.activityLabel
+                }
+              </Badge>
+            )}
+
+            {repositoryInsights && (
+              <Badge
+                variant={
+                  repositoryInsights
+                    .repositoryStatus
+                    .variant ===
+                  "neutral"
+                    ? "default"
+                    : repositoryInsights
+                        .repositoryStatus
+                        .variant
+                }
+              >
+                {
+                  repositoryInsights
+                    .repositoryStatus.label
+                }
+              </Badge>
+            )}
+          </div>
+
+          <h1
+            className="
+              mt-5
+              break-words
+              text-3xl
+              font-bold
+              leading-tight
+              tracking-tight
+              text-gray-900
+              dark:text-white
+              sm:text-4xl
+              lg:text-5xl
+            "
+          >
+            {project.name}
+          </h1>
+
+          <p
+            className="
+              mt-5
+              max-w-4xl
+              text-base
+              leading-8
+              text-gray-600
+              dark:text-gray-300
+              sm:text-lg
+            "
+          >
+            {repository?.description ||
+              project.description}
+          </p>
+
+          {repository && (
+            <p
+              className="
+                mt-3
+                break-all
+                text-sm
+                font-medium
+                text-gray-500
+                dark:text-gray-400
+              "
+            >
+              github.com/
+              {repository.full_name}
+            </p>
+          )}
+
+          <TechnologyTags
+            technologies={
+              project.technologies
+            }
+            size="md"
+            className="mt-6"
+          />
+
+          <div
+            className="
+              mt-6
+              grid
+              gap-3
+              sm:grid-cols-2
+              lg:grid-cols-4
+            "
+          >
+            <HeroStat
+              label="Stars"
+              value={
+                loading
+                  ? "…"
+                  : formatNumber(
+                      repository?.stargazers_count ??
+                        project.stars
+                    )
+              }
+            />
+
+            <HeroStat
+              label="Forks"
+              value={
+                loading
+                  ? "…"
+                  : formatNumber(
+                      repository?.forks_count ??
+                        0
+                    )
+              }
+            />
+
+            <HeroStat
+              label="Open issues"
+              value={
+                loading
+                  ? "…"
+                  : formatNumber(
+                      repository?.open_issues_count ??
+                        0
+                    )
+              }
+            />
+
+            <HeroStat
+              label="Activity"
+              value={
+                loading
+                  ? "…"
+                  : repositoryInsights?.maintenanceLabel ??
+                    "Unknown"
+              }
             />
           </div>
-        </div>
 
-        {/* Hero actions */}
+          {repositoryInsights && (
+            <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">
+              {
+                repositoryInsights.activityDescription
+              }
+            </p>
+          )}
+        </div>
 
         <div
           className="
-            mt-8
             flex
+            w-full
+            shrink-0
             flex-col
-            gap-3
-            border-t
-            border-gray-200
-            pt-7
-            sm:flex-row
-            sm:flex-wrap
-            dark:border-gray-800
+            gap-2
+            xl:w-56
           "
         >
           <Button
-            href={
-              repository?.html_url ||
-              project.githubUrl
-            }
+            href={githubUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="
-              min-h-11
-              w-full
-              sm:w-auto
-            "
+            className="min-h-11 w-full"
           >
-            Explore on GitHub →
+            View on GitHub →
           </Button>
 
           <BookmarkButton
@@ -347,26 +586,60 @@ const {
           <Button
             href="/projects"
             variant="secondary"
-            className="
-              min-h-11
-              w-full
-              sm:w-auto
-            "
+            className="min-h-11 w-full"
           >
             ← Back to Projects
           </Button>
         </div>
-      </Card>
+      </div>
+    </Card>
+  );
+}
 
-      {/* ========================================
-          GITHUB LOADING
-      ======================================== */}
+const ProjectDetails = ({
+  project,
+}: ProjectDetailsProps) => {
+  const projectPath =
+    `/projects/${project.id}`;
+
+  const {
+    repository,
+    readme,
+    languages,
+    commits,
+    releases,
+    contributors,
+    loading,
+    error,
+  } = useGitHubProject(
+    project.githubUrl
+  );
+
+  const repositoryInsights =
+    repository
+      ? getRepositoryInsights(
+          repository
+        )
+      : null;
+
+  const githubUrl =
+    repository?.html_url ||
+    project.githubUrl;
+
+  return (
+    <div className="space-y-8">
+      <ProjectHero
+        project={project}
+        projectPath={projectPath}
+        repository={repository}
+        repositoryInsights={
+          repositoryInsights
+        }
+        loading={loading}
+        githubUrl={githubUrl}
+      />
 
       {loading && <GitHubLoading />}
-
-      {/* ========================================
-          GITHUB ERROR
-      ======================================== */}
 
       {!loading && error && (
         <Card
@@ -417,392 +690,109 @@ const {
         </Card>
       )}
 
-      {/* ========================================
-          LIVE GITHUB REPOSITORY
-      ======================================== */}
-
-      {!loading && repository && (
-        <Card
-          padding="lg"
-          className="rounded-2xl"
-        >
-          <p
-            className="
-              text-xs
-              font-semibold
-              uppercase
-              tracking-wider
-              text-gray-500
-              dark:text-gray-400
-            "
-          >
-            Live Repository Data
-          </p>
-
-          <h2
-            className="
-              mt-2
-              text-2xl
-              font-bold
-              text-gray-900
-              dark:text-white
-            "
-          >
-            GitHub repository
-          </h2>
-
-          <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-            Information retrieved directly
-            from GitHub.
-          </p>
-
-          {/* Main stats */}
-
-          <div
-            className="
-              mt-6
-              grid
-              gap-3
-              sm:grid-cols-2
-              lg:grid-cols-4
-            "
-          >
-            {/* Stars */}
-
-            <div
-              className="
-                rounded-xl
-                border
-                border-gray-200
-                bg-gray-50
-                p-4
-                dark:border-gray-800
-                dark:bg-gray-800/50
-              "
-            >
-              <p className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                ⭐ Stars
-              </p>
-
-              <p className="mt-2 text-2xl font-bold text-gray-900 dark:text-white">
-                {formatNumber(
-                  repository.stargazers_count
-                )}
-              </p>
-            </div>
-
-            {/* Forks */}
-
-            <div
-              className="
-                rounded-xl
-                border
-                border-gray-200
-                bg-gray-50
-                p-4
-                dark:border-gray-800
-                dark:bg-gray-800/50
-              "
-            >
-              <p className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                🍴 Forks
-              </p>
-
-              <p className="mt-2 text-2xl font-bold text-gray-900 dark:text-white">
-                {formatNumber(
-                  repository.forks_count
-                )}
-              </p>
-            </div>
-
-            {/* Issues */}
-
-            <div
-              className="
-                rounded-xl
-                border
-                border-gray-200
-                bg-gray-50
-                p-4
-                dark:border-gray-800
-                dark:bg-gray-800/50
-              "
-            >
-              <p className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                🐛 Open Issues
-              </p>
-
-              <p className="mt-2 text-2xl font-bold text-gray-900 dark:text-white">
-                {formatNumber(
-                  repository.open_issues_count
-                )}
-              </p>
-            </div>
-
-            {/* Language */}
-
-            <div
-              className="
-                rounded-xl
-                border
-                border-gray-200
-                bg-gray-50
-                p-4
-                dark:border-gray-800
-                dark:bg-gray-800/50
-              "
-            >
-              <p className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                💻 Primary Language
-              </p>
-
-              <p className="mt-2 text-lg font-bold text-gray-900 dark:text-white">
-                {repository.language ||
-                  "Not specified"}
-              </p>
-            </div>
-          </div>
-
-          {/* Repository metadata */}
-
-          <div
-            className="
-              mt-6
-              grid
-              gap-x-8
-              gap-y-5
-              border-t
-              border-gray-200
-              pt-6
-              sm:grid-cols-2
-              dark:border-gray-800
-            "
-          >
-            <div>
-              <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                Repository
-              </p>
-
-              <p className="mt-1 break-all font-medium text-gray-900 dark:text-white">
-                {repository.full_name}
-              </p>
-            </div>
-
-            <div>
-              <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                License
-              </p>
-
-              <p className="mt-1 font-medium text-gray-900 dark:text-white">
-                {repository.license?.name ||
-                  "Not specified"}
-              </p>
-            </div>
-
-            <div>
-              <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                Created
-              </p>
-
-              <p className="mt-1 font-medium text-gray-900 dark:text-white">
-                {formatGitHubDate(
-                  repository.created_at
-                )}
-              </p>
-            </div>
-
-            <div>
-              <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                Last Updated
-              </p>
-
-              <p className="mt-1 font-medium text-gray-900 dark:text-white">
-                {formatGitHubDate(
-                  repository.updated_at
-                )}
-              </p>
-            </div>
-
-            <div>
-              <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                Last Push
-              </p>
-
-              <p className="mt-1 font-medium text-gray-900 dark:text-white">
-                {formatGitHubDate(
-                  repository.pushed_at
-                )}
-              </p>
-            </div>
-
-            <div>
-              <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                Default Branch
-              </p>
-
-              <p className="mt-1 font-medium text-gray-900 dark:text-white">
-                {repository.default_branch}
-              </p>
-            </div>
-          </div>
-
-          {/* Topics */}
-
-          {repository.topics.length > 0 && (
-            <div
-              className="
-                mt-6
-                border-t
-                border-gray-200
-                pt-6
-                dark:border-gray-800
-              "
-            >
-              <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                Repository Topics
-              </p>
-
-              <div className="mt-3 flex flex-wrap gap-2">
-                {repository.topics.map(
-                  (topic) => (
-                    <span
-                      key={topic}
-                      className="
-                        rounded-full
-                        bg-gray-100
-                        px-3
-                        py-1.5
-                        text-xs
-                        font-medium
-                        text-gray-700
-                        dark:bg-gray-800
-                        dark:text-gray-300
-                      "
-                    >
-                      #{topic}
-                    </span>
-                  )
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* GitHub repository link */}
-
-          <div className="mt-6">
-            <a
-              href={repository.html_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="
-                text-sm
-                font-semibold
-                text-blue-600
-                hover:underline
-                dark:text-blue-400
-              "
-            >
-              View repository on GitHub →
-            </a>
-          </div>
-        </Card>
-      )}
-
-      {/* ========================================
-              REPOSITORY HEALTH
-          ======================================== */}
-
-          {!loading &&
-            repository &&
-            repositoryInsights && (
-              <RepositoryHealth
-                repository={repository}
-                insights={repositoryInsights}
-              />
-            )}
-            {!loading && repository && (
-              <RepositoryActivity
-                commits={commits}
-              />
-            )}
-            {!loading && repository && (
-              <RepositoryReleases
-                releases={releases}
-              />
-            )}
-
-            {!loading && repository && (
-              <RepositoryContributors
-                contributors={contributors}
-              />
-            )}
-
-          {/* ========================================
-              PROJECT OVERVIEW
-          ======================================== */}
-
+      <div
+        className="
+                  grid
+                  gap-8
+                  lg:grid-cols-[minmax(0,1fr)_360px]
+                  lg:items-start
+                "
+      >
+        <div className="min-w-0 space-y-8">
           <ProjectOverview
             project={project}
             repositoryDescription={
               repository?.description
             }
           />
-      {/* ========================================
-              TECHNOLOGY STACK
-          ======================================== */}
-
-          <TechnologyStack
-            technologies={project.technologies}
-          />
-
-          {!loading && (
-              <LanguageBreakdown
-                languages={languages}
-              />
-            )}
-      {/* ========================================
-            PROJECT PROFILE
-        ======================================== */}
-
-        <ProjectProfile project={project} />
-
-      {/* ========================================
-              CONTRIBUTION
-          ======================================== */}
-
-          <ContributionGuide project={project} />
-
-      {/* ========================================
-              README
-          ======================================== */}
 
           <ReadmeSection
             readme={readme}
             githubUrl={project.githubUrl}
             defaultBranch={
-              repository?.default_branch ?? "main"
+              repository?.default_branch ??
+              "main"
             }
           />
 
-      {/* ========================================
-              HOW TO EXPLORE
-          ======================================== */}
+          {!loading && repository && (
+            <RepositoryActivity
+              commits={commits}
+            />
+          )}
 
-          <ExplorerGuide />
+          {!loading && repository && (
+            <RepositoryReleases
+              releases={releases}
+            />
+          )}
 
-      {/* ========================================
-              GITHUB CTA
-          ======================================== */}
+          {!loading && repository && (
+            <RepositoryContributors
+              contributors={
+                contributors
+              }
+            />
+          )}
 
-          <GitHubCTA
-            githubUrl={
-              repository?.html_url ||
-              project.githubUrl
+          {!loading && (
+            <LanguageBreakdown
+              languages={languages}
+            />
+          )}
+        </div>
+
+        <aside
+          className="
+            min-w-0
+            space-y-8
+            lg:sticky
+            lg:top-24
+            lg:self-start
+          "
+        >
+          <ProjectProfile
+            project={project}
+          />
+
+          {!loading &&
+            repository &&
+            repositoryInsights && (
+              <RepositoryHealth
+                repository={repository}
+                insights={
+                  repositoryInsights
+                }
+              />
+            )}
+
+          {!loading && repository && (
+            <RepositoryMetadata
+              repository={repository}
+            />
+          )}
+
+          <TechnologyStack
+            technologies={
+              project.technologies
             }
           />
-      {/* ========================================
-          FOOTER ACTIONS
-      ======================================== */}
+
+          <ContributionGuide
+            project={project}
+          />
+
+          <QuickActions
+            projectId={project.id}
+            projectPath={projectPath}
+            githubUrl={githubUrl}
+          />
+        </aside>
+      </div>
+
+      <ExplorerGuide />
+
+      <GitHubCTA githubUrl={githubUrl} />
 
       <div
         className="

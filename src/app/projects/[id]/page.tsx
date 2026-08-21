@@ -26,7 +26,7 @@ export default async function ProjectDetailsPage({
 
   return (
     <main className="min-h-screen bg-gray-50 transition-colors duration-200 dark:bg-gray-950">
-      <section className="mx-auto max-w-4xl px-4 py-10 sm:px-6 sm:py-12">
+      <section className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 sm:py-12">
         <ProjectDetails project={project} />
       </section>
     </main>

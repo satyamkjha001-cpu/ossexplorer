@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import BookmarkButton from "@/components/project/BookmarkButton";
 import DifficultyBadge from "@/components/project/DifficultyBadge";
 import ProjectMeta from "@/components/project/ProjectMeta";
@@ -19,124 +21,138 @@ type ProjectCardProps = {
 const ProjectCard = ({
   project,
 }: ProjectCardProps) => {
+  const projectHref =
+    `/projects/${project.id}`;
+
   return (
     <Card
       hover
       className="
+        relative
         flex
         h-full
         flex-col
         overflow-hidden
       "
     >
-      {/* ========================================
-          PROJECT HEADER
-      ======================================== */}
-
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0 flex-1">
-          <p
-            className="
-              truncate
-              text-xs
-              font-semibold
-              uppercase
-              tracking-wide
-              text-gray-500
-              dark:text-gray-400
-            "
-          >
-            {project.domain}
-          </p>
-
-          <h2
-            className="
-              mt-2
-              line-clamp-2
-              text-lg
-              font-bold
-              leading-7
-              text-gray-900
-              transition-colors
-              dark:text-white
-              sm:text-xl
-            "
-          >
-            {project.name}
-          </h2>
-        </div>
-
-        <div className="shrink-0">
-          <DifficultyBadge
-            difficulty={
-              project.difficulty
-            }
-            size="sm"
-          />
-        </div>
-      </div>
-
-      {/* ========================================
-          DESCRIPTION
-      ======================================== */}
-
-      <p
+      <Link
+        href={projectHref}
         className="
-          mt-4
-          line-clamp-3
-          min-h-[4.5rem]
-          text-sm
-          leading-6
-          text-gray-600
-          dark:text-gray-300
+          absolute
+          inset-0
+          z-0
+          rounded-xl
         "
-      >
-        {project.description}
-      </p>
-
-      {/* ========================================
-          TECHNOLOGIES
-      ======================================== */}
-
-      <TechnologyTags
-        technologies={
-          project.technologies
-        }
-        maxVisible={4}
-        className="mt-5"
+        aria-label={`View ${project.name}`}
       />
-
-      {/* ========================================
-          PROJECT BADGES
-      ======================================== */}
 
       <div
         className="
-          mt-5
+          relative
+          z-10
           flex
-          min-h-7
-          flex-wrap
-          gap-2
+          flex-1
+          flex-col
+          pointer-events-none
         "
       >
-        {project.beginnerFriendly && (
-          <Badge variant="success">
-            Beginner Friendly
-          </Badge>
-        )}
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <p
+              className="
+                truncate
+                text-xs
+                font-semibold
+                uppercase
+                tracking-wide
+                text-gray-500
+                dark:text-gray-400
+              "
+            >
+              {project.domain}
+            </p>
 
-        {project.goodFirstIssue && (
-          <Badge variant="info">
-            Good First Issue
-          </Badge>
-        )}
+            <h2
+              className="
+                mt-2
+                line-clamp-2
+                text-lg
+                font-bold
+                leading-7
+                text-gray-900
+                transition-colors
+                group-hover:text-gray-700
+                dark:text-white
+                dark:group-hover:text-gray-200
+                sm:text-xl
+              "
+            >
+              {project.name}
+            </h2>
+          </div>
+
+          <div className="shrink-0">
+            <DifficultyBadge
+              difficulty={
+                project.difficulty
+              }
+              size="sm"
+            />
+          </div>
+        </div>
+
+        <p
+          className="
+            mt-4
+            line-clamp-3
+            min-h-[4.5rem]
+            text-sm
+            leading-6
+            text-gray-600
+            dark:text-gray-300
+          "
+        >
+          {project.description}
+        </p>
+
+        <TechnologyTags
+          technologies={
+            project.technologies
+          }
+          maxVisible={4}
+          className="mt-5"
+        />
+
+        <div
+          className="
+            mt-5
+            flex
+            min-h-7
+            flex-wrap
+            gap-2
+          "
+        >
+          {project.beginnerFriendly && (
+            <Badge variant="success">
+              Beginner Friendly
+            </Badge>
+          )}
+
+          {project.goodFirstIssue && (
+            <Badge variant="info">
+              Good First Issue
+            </Badge>
+          )}
+        </div>
       </div>
 
-      {/* ========================================
-          FOOTER
-      ======================================== */}
-
-      <CardFooter className="mt-auto">
+      <CardFooter
+        className="
+          relative
+          z-10
+          pointer-events-auto
+        "
+      >
         <CardDivider>
           <ProjectMeta
             stars={project.stars}
@@ -145,10 +161,6 @@ const ProjectCard = ({
             }
           />
         </CardDivider>
-
-        {/* ========================================
-            ACTIONS
-        ======================================== */}
 
         <div
           className="
@@ -160,7 +172,7 @@ const ProjectCard = ({
           "
         >
           <Button
-            href={`/projects/${project.id}`}
+            href={projectHref}
             fullWidth
             className="
               min-h-11
