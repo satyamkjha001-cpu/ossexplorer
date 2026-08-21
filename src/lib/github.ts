@@ -71,15 +71,10 @@ export type GitHubRepository = {
 
 export type GitHubReadme = {
   name: string;
-
   path: string;
-
   html_url: string;
-
   download_url: string | null;
-
   content: string;
-
   encoding: string;
 };
 
@@ -89,34 +84,38 @@ export type GitHubLanguages = Record<
 >;
 
 /* ========================================
-   GITHUB COMMIT
+   GITHUB RELEASE
 ======================================== */
 
-  export type GitHubRelease = {
-    id: number;
+export type GitHubRelease = {
+  id: number;
 
-    name: string | null;
+  name: string | null;
 
-    tag_name: string;
+  tag_name: string;
 
+  html_url: string;
+
+  body: string | null;
+
+  draft: boolean;
+
+  prerelease: boolean;
+
+  created_at: string;
+
+  published_at: string | null;
+
+  author: {
+    login: string;
+    avatar_url: string;
     html_url: string;
+  } | null;
+};
 
-    body: string | null;
-
-    draft: boolean;
-
-    prerelease: boolean;
-
-    created_at: string;
-
-    published_at: string | null;
-
-    author: {
-      login: string;
-      avatar_url: string;
-      html_url: string;
-    } | null;
-  };
+/* ========================================
+   GITHUB COMMIT
+======================================== */
 
 export type GitHubCommit = {
   sha: string;
@@ -153,6 +152,24 @@ export type GitHubCommit = {
 };
 
 /* ========================================
+   GITHUB CONTRIBUTOR
+======================================== */
+
+export type GitHubContributor = {
+  login: string;
+
+  id: number;
+
+  avatar_url: string;
+
+  html_url: string;
+
+  contributions: number;
+
+  type: string;
+};
+
+/* ========================================
    EXTRACT OWNER + REPOSITORY
 ======================================== */
 
@@ -179,6 +196,7 @@ export function parseGitHubUrl(
 
     return {
       owner: parts[0],
+
       repo: parts[1].replace(
         /\.git$/,
         ""
@@ -347,8 +365,6 @@ export async function getGitHubCommits(
     return null;
   }
 
-
-
   return response.json();
 }
 
@@ -372,6 +388,42 @@ export async function getGitHubReleases(
     )}/${encodeURIComponent(
       parsed.repo
     )}/releases?per_page=5`,
+    {
+      headers: githubHeaders,
+
+      next: {
+        revalidate: 1800,
+      },
+    }
+  );
+
+  if (!response.ok) {
+    return null;
+  }
+
+  return response.json();
+}
+
+/* ========================================
+   GET CONTRIBUTORS
+======================================== */
+
+export async function getGitHubContributors(
+  githubUrl: string
+): Promise<GitHubContributor[] | null> {
+  const parsed =
+    parseGitHubUrl(githubUrl);
+
+  if (!parsed) {
+    return null;
+  }
+
+  const response = await fetch(
+    `https://api.github.com/repos/${encodeURIComponent(
+      parsed.owner
+    )}/${encodeURIComponent(
+      parsed.repo
+    )}/contributors?per_page=10`,
     {
       headers: githubHeaders,
 

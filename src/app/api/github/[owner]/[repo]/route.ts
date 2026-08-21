@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import {
   getGitHubCommits,
+  getGitHubContributors,
   getGitHubLanguages,
   getGitHubReadme,
   getGitHubReleases,
@@ -46,6 +47,7 @@ export async function GET(
       languages,
       commits,
       releases,
+      contributors,
     ] = await Promise.all([
       getGitHubRepository(
         githubUrl
@@ -66,6 +68,10 @@ export async function GET(
       getGitHubReleases(
         githubUrl
       ),
+
+      getGitHubContributors(
+        githubUrl
+      ),
     ]);
 
     if (
@@ -73,7 +79,8 @@ export async function GET(
       !readme &&
       !languages &&
       !commits &&
-      !releases
+      !releases &&
+      !contributors
     ) {
       return NextResponse.json(
         {
@@ -93,6 +100,7 @@ export async function GET(
         languages,
         commits,
         releases,
+        contributors,
       },
       {
         status: 200,

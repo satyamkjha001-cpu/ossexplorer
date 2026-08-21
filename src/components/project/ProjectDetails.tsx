@@ -44,6 +44,8 @@ import RepositoryActivity from "@/components/project/RepositoryActivity";
 
 import RepositoryReleases from "@/components/project/RepositoryReleases";
 
+import RepositoryContributors from "@/components/project/RepositoryContributors";
+
 type ProjectDetailsProps = {
   project: Project;
 };
@@ -155,6 +157,7 @@ const {
   languages,
   commits,
   releases,
+  contributors,
   loading,
   error,
 } = useGitHubProject(
@@ -725,6 +728,12 @@ const {
             {!loading && repository && (
               <RepositoryReleases
                 releases={releases}
+              />
+            )}
+
+            {!loading && repository && (
+              <RepositoryContributors
+                contributors={contributors}
               />
             )}
 

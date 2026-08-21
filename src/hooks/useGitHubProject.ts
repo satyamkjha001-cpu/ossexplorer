@@ -7,6 +7,7 @@ import {
 
 import type {
   GitHubCommit,
+  GitHubContributor,
   GitHubLanguages,
   GitHubRelease,
   GitHubRepository,
@@ -18,6 +19,7 @@ type GitHubProjectResponse = {
   languages: GitHubLanguages | null;
   commits: GitHubCommit[] | null;
   releases: GitHubRelease[] | null;
+  contributors: GitHubContributor[] | null;
 };
 
 type UseGitHubProjectResult = {
@@ -26,6 +28,7 @@ type UseGitHubProjectResult = {
   languages: GitHubLanguages | null;
   commits: GitHubCommit[] | null;
   releases: GitHubRelease[] | null;
+  contributors: GitHubContributor[] | null;
   loading: boolean;
   error: string | null;
 };
@@ -102,6 +105,13 @@ export function useGitHubProject(
   );
 
   const [
+    contributors,
+    setContributors,
+  ] = useState<GitHubContributor[] | null>(
+    null
+  );
+
+  const [
     loading,
     setLoading,
   ] = useState(true);
@@ -130,6 +140,7 @@ export function useGitHubProject(
         setLanguages(null);
         setCommits(null);
         setReleases(null);
+        setContributors(null);
 
         setError(
           "Invalid GitHub repository URL."
@@ -183,12 +194,17 @@ export function useGitHubProject(
           data.releases
         );
 
+        setContributors(
+          data.contributors
+        );
+
         if (
           !data.repository &&
           !data.readme &&
           !data.languages &&
           !data.commits &&
-          !data.releases
+          !data.releases &&
+          !data.contributors
         ) {
           setError(
             "Unable to load GitHub repository information."
@@ -212,6 +228,7 @@ export function useGitHubProject(
         setLanguages(null);
         setCommits(null);
         setReleases(null);
+        setContributors(null);
 
         setError(
           "Unable to load GitHub repository information."
@@ -238,6 +255,7 @@ export function useGitHubProject(
     languages,
     commits,
     releases,
+    contributors,
     loading,
     error,
   };
