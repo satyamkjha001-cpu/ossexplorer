@@ -92,6 +92,32 @@ export type GitHubLanguages = Record<
    GITHUB COMMIT
 ======================================== */
 
+  export type GitHubRelease = {
+    id: number;
+
+    name: string | null;
+
+    tag_name: string;
+
+    html_url: string;
+
+    body: string | null;
+
+    draft: boolean;
+
+    prerelease: boolean;
+
+    created_at: string;
+
+    published_at: string | null;
+
+    author: {
+      login: string;
+      avatar_url: string;
+      html_url: string;
+    } | null;
+  };
+
 export type GitHubCommit = {
   sha: string;
 
@@ -308,6 +334,44 @@ export async function getGitHubCommits(
     )}/${encodeURIComponent(
       parsed.repo
     )}/commits?per_page=5`,
+    {
+      headers: githubHeaders,
+
+      next: {
+        revalidate: 1800,
+      },
+    }
+  );
+
+  if (!response.ok) {
+    return null;
+  }
+
+
+
+  return response.json();
+}
+
+/* ========================================
+   GET RECENT RELEASES
+======================================== */
+
+export async function getGitHubReleases(
+  githubUrl: string
+): Promise<GitHubRelease[] | null> {
+  const parsed =
+    parseGitHubUrl(githubUrl);
+
+  if (!parsed) {
+    return null;
+  }
+
+  const response = await fetch(
+    `https://api.github.com/repos/${encodeURIComponent(
+      parsed.owner
+    )}/${encodeURIComponent(
+      parsed.repo
+    )}/releases?per_page=5`,
     {
       headers: githubHeaders,
 

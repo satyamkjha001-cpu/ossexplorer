@@ -4,6 +4,7 @@ import {
   getGitHubCommits,
   getGitHubLanguages,
   getGitHubReadme,
+  getGitHubReleases,
   getGitHubRepository,
 } from "@/lib/github";
 
@@ -44,6 +45,7 @@ export async function GET(
       readme,
       languages,
       commits,
+      releases,
     ] = await Promise.all([
       getGitHubRepository(
         githubUrl
@@ -60,13 +62,18 @@ export async function GET(
       getGitHubCommits(
         githubUrl
       ),
+
+      getGitHubReleases(
+        githubUrl
+      ),
     ]);
 
     if (
       !repository &&
       !readme &&
       !languages &&
-      !commits
+      !commits &&
+      !releases
     ) {
       return NextResponse.json(
         {
@@ -85,6 +92,7 @@ export async function GET(
         readme,
         languages,
         commits,
+        releases,
       },
       {
         status: 200,

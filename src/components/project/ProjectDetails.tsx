@@ -42,6 +42,8 @@ import LanguageBreakdown from "@/components/project/LanguageBreakdown";
 
 import RepositoryActivity from "@/components/project/RepositoryActivity";
 
+import RepositoryReleases from "@/components/project/RepositoryReleases";
+
 type ProjectDetailsProps = {
   project: Project;
 };
@@ -147,15 +149,16 @@ const ProjectDetails = ({
   const projectPath =
     `/projects/${project.id}`;
 
-  const {
-      repository,
-      readme,
-      languages,
-      commits,
-      loading,
-      error,
-    } = useGitHubProject(
-      project.githubUrl
+const {
+  repository,
+  readme,
+  languages,
+  commits,
+  releases,
+  loading,
+  error,
+} = useGitHubProject(
+  project.githubUrl
 );
 
 
@@ -717,6 +720,11 @@ const ProjectDetails = ({
             {!loading && repository && (
               <RepositoryActivity
                 commits={commits}
+              />
+            )}
+            {!loading && repository && (
+              <RepositoryReleases
+                releases={releases}
               />
             )}
 

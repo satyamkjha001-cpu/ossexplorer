@@ -8,6 +8,7 @@ import {
 import type {
   GitHubCommit,
   GitHubLanguages,
+  GitHubRelease,
   GitHubRepository,
 } from "@/lib/github";
 
@@ -16,6 +17,7 @@ type GitHubProjectResponse = {
   readme: string | null;
   languages: GitHubLanguages | null;
   commits: GitHubCommit[] | null;
+  releases: GitHubRelease[] | null;
 };
 
 type UseGitHubProjectResult = {
@@ -23,6 +25,7 @@ type UseGitHubProjectResult = {
   readme: string | null;
   languages: GitHubLanguages | null;
   commits: GitHubCommit[] | null;
+  releases: GitHubRelease[] | null;
   loading: boolean;
   error: string | null;
 };
@@ -73,31 +76,42 @@ export function useGitHubProject(
   const [
     readme,
     setReadme,
-  ] = useState<string | null>(null);
+  ] = useState<string | null>(
+    null
+  );
 
   const [
-  languages,
-  setLanguages,
-] = useState<GitHubLanguages | null>(
-  null
-);
+    languages,
+    setLanguages,
+  ] = useState<GitHubLanguages | null>(
+    null
+  );
 
-const [
-  commits,
-  setCommits,
-] = useState<GitHubCommit[] | null>(
-  null
-);
+  const [
+    commits,
+    setCommits,
+  ] = useState<GitHubCommit[] | null>(
+    null
+  );
 
-const [
-  loading,
-  setLoading,
-] = useState(true);
+  const [
+    releases,
+    setReleases,
+  ] = useState<GitHubRelease[] | null>(
+    null
+  );
+
+  const [
+    loading,
+    setLoading,
+  ] = useState(true);
 
   const [
     error,
     setError,
-  ] = useState<string | null>(null);
+  ] = useState<string | null>(
+    null
+  );
 
   useEffect(() => {
     const controller =
@@ -115,6 +129,8 @@ const [
         setReadme(null);
         setLanguages(null);
         setCommits(null);
+        setReleases(null);
+
         setError(
           "Invalid GitHub repository URL."
         );
@@ -151,15 +167,28 @@ const [
           data.repository
         );
 
-        setReadme(data.readme);
+        setReadme(
+          data.readme
+        );
 
         setLanguages(
           data.languages
         );
 
+        setCommits(
+          data.commits
+        );
+
+        setReleases(
+          data.releases
+        );
+
         if (
           !data.repository &&
-          !data.readme
+          !data.readme &&
+          !data.languages &&
+          !data.commits &&
+          !data.releases
         ) {
           setError(
             "Unable to load GitHub repository information."
@@ -181,6 +210,8 @@ const [
         setRepository(null);
         setReadme(null);
         setLanguages(null);
+        setCommits(null);
+        setReleases(null);
 
         setError(
           "Unable to load GitHub repository information."
@@ -202,11 +233,12 @@ const [
   }, [githubUrl]);
 
   return {
-  repository,
-  readme,
-  languages,
-  commits,
-  loading,
-  error,
-};
+    repository,
+    readme,
+    languages,
+    commits,
+    releases,
+    loading,
+    error,
+  };
 }
