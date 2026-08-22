@@ -28,8 +28,8 @@ export default function ScrollReveal({
     ).matches;
 
     if (prefersReducedMotion) {
-      setVisible(true);
-      return;
+      const raf = requestAnimationFrame(() => setVisible(true));
+      return () => cancelAnimationFrame(raf);
     }
 
     const observer = new IntersectionObserver(

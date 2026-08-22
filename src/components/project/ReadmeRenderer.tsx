@@ -728,7 +728,6 @@ function createReadmeComponents(
     a: ({
       href,
       children,
-      node: _node,
       ...props
     }) => {
       const resolvedHref =
@@ -795,6 +794,7 @@ function createReadmeComponents(
 
       if (badge) {
         return (
+          /* eslint-disable-next-line @next/next/no-img-element */
           <img
             {...props}
             src={srcString}
@@ -825,6 +825,7 @@ function createReadmeComponents(
       ============================== */
 
       return (
+        /* eslint-disable-next-line @next/next/no-img-element */
         <img
           {...props}
           src={srcString}
@@ -875,7 +876,6 @@ function createReadmeComponents(
 
     table: ({
       children,
-      node: _node,
       ...props
     }) => (
       <div className="my-6 overflow-x-auto">

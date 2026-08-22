@@ -4,6 +4,7 @@ import BookmarkButton from "@/components/project/BookmarkButton";
 import DifficultyBadge from "@/components/project/DifficultyBadge";
 import ProjectMeta from "@/components/project/ProjectMeta";
 import TechnologyTags from "@/components/project/TechnologyTags";
+import HighlightText from "@/components/ui/HighlightText";
 
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
@@ -16,13 +17,14 @@ import type { Project } from "@/data/projects";
 
 type ProjectCardProps = {
   project: Project;
+  searchQuery?: string;
 };
 
 const ProjectCard = ({
   project,
+  searchQuery = "",
 }: ProjectCardProps) => {
-  const projectHref =
-    `/projects/${project.id}`;
+  const projectHref = `/projects/${project.id}`;
 
   return (
     <Card
@@ -33,6 +35,9 @@ const ProjectCard = ({
         h-full
         flex-col
         overflow-hidden
+        transition-all
+        duration-200
+        hover:shadow-md
       "
     >
       <Link
@@ -69,7 +74,7 @@ const ProjectCard = ({
                 dark:text-gray-400
               "
             >
-              {project.domain}
+              <HighlightText text={project.domain} query={searchQuery} />
             </p>
 
             <h2
@@ -81,21 +86,19 @@ const ProjectCard = ({
                 leading-7
                 text-gray-900
                 transition-colors
-                group-hover:text-gray-700
+                group-hover:text-blue-600
                 dark:text-white
-                dark:group-hover:text-gray-200
+                dark:group-hover:text-blue-400
                 sm:text-xl
               "
             >
-              {project.name}
+              <HighlightText text={project.name} query={searchQuery} />
             </h2>
           </div>
 
           <div className="shrink-0">
             <DifficultyBadge
-              difficulty={
-                project.difficulty
-              }
+              difficulty={project.difficulty}
               size="sm"
             />
           </div>
@@ -112,13 +115,12 @@ const ProjectCard = ({
             dark:text-gray-300
           "
         >
-          {project.description}
+          <HighlightText text={project.description} query={searchQuery} />
         </p>
 
         <TechnologyTags
-          technologies={
-            project.technologies
-          }
+          technologies={project.technologies}
+          searchQuery={searchQuery}
           maxVisible={4}
           className="mt-5"
         />
@@ -156,9 +158,7 @@ const ProjectCard = ({
         <CardDivider>
           <ProjectMeta
             stars={project.stars}
-            dateAdded={
-              project.dateAdded
-            }
+            dateAdded={project.dateAdded}
           />
         </CardDivider>
 

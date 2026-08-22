@@ -157,7 +157,7 @@ export default function RepositoryActivity({
       </h2>
 
       <p className="mt-3 max-w-3xl text-sm leading-6 text-gray-500 dark:text-gray-400">
-        Recent commits from the project's
+        Recent commits from the project&apos;s
         GitHub repository.
       </p>
 

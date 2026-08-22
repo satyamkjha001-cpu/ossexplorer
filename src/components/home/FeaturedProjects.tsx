@@ -16,13 +16,14 @@ const recentlyAddedProjects = [...projects]
 
 const FeaturedProjects = () => {
   return (
-    <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:py-16">
+    <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:py-20">
       <ScrollReveal>
         <SectionHeader
           eyebrow="Trending Now"
           title="Top Projects by Stars"
-          description="The most-starred projects in our collection — great places to learn from proven open-source codebases."
-          linkLabel="View all projects →"
+          description="The most-starred repositories in our collection — great places to study proven architectures."
+          linkLabel="View all top starred →"
+          linkHref="/projects?sort=stars-desc"
         />
       </ScrollReveal>
 
@@ -30,13 +31,14 @@ const FeaturedProjects = () => {
         <ProjectGrid projects={trendingProjects} />
       </ScrollReveal>
 
-      <div className="mt-16 lg:mt-20">
+      <div className="mt-20 lg:mt-24">
         <ScrollReveal>
           <SectionHeader
             eyebrow="Fresh Discoveries"
             title="Recently Added"
-            description="The newest projects added to our open-source collection."
-            linkLabel="Explore all →"
+            description="The newest repositories curated into our open-source catalog."
+            linkLabel="Explore recently added →"
+            linkHref="/projects?sort=date-desc"
           />
         </ScrollReveal>
 

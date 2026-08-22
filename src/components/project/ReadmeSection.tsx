@@ -27,8 +27,8 @@ export default function ReadmeSection({
 
       <p className="mt-3 text-sm leading-6 text-gray-500 dark:text-gray-400">
         This README is retrieved from the
-        project's GitHub repository. It can
-        contain the project's actual purpose,
+        project&apos;s GitHub repository. It can
+        contain the project&apos;s actual purpose,
         features, installation instructions,
         usage examples, architecture,
         contribution instructions, and other

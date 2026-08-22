@@ -47,6 +47,9 @@ export type ProjectFilterState = {
   selectedDifficulty: string;
   sortOption: SortOption;
   technologyMatchMode: TechnologyMatchMode;
+  beginnerFriendly?: boolean;
+  goodFirstIssue?: boolean;
+  minStars?: number;
 };
 
 /* ========================================
@@ -191,11 +194,30 @@ export function filterProjects(
       project.difficulty ===
         filters.selectedDifficulty;
 
+    /* ========================================
+       QUICK PRESET FILTERS
+    ======================================== */
+
+    const matchesBeginnerFriendly =
+      !filters.beginnerFriendly ||
+      project.beginnerFriendly === true;
+
+    const matchesGoodFirstIssue =
+      !filters.goodFirstIssue ||
+      project.goodFirstIssue === true;
+
+    const matchesMinStars =
+      !filters.minStars ||
+      project.stars >= filters.minStars;
+
     return (
       matchesSearch &&
       matchesDomain &&
       matchesTechnology &&
-      matchesDifficulty
+      matchesDifficulty &&
+      matchesBeginnerFriendly &&
+      matchesGoodFirstIssue &&
+      matchesMinStars
     );
   });
 }
@@ -424,6 +446,18 @@ export function countActiveFilters(
     count++;
   }
 
+  if (filters.beginnerFriendly) {
+    count++;
+  }
+
+  if (filters.goodFirstIssue) {
+    count++;
+  }
+
+  if (filters.minStars && filters.minStars > 0) {
+    count++;
+  }
+
   return count;
 }
 
@@ -444,12 +478,15 @@ export function hasActiveFilters(
    URL UPDATE PARAMS
 ======================================== */
 
-type UrlUpdateParams = {
+export type UrlUpdateParams = {
   search?: string;
   domain?: string;
   technologies?: string[];
   difficulty?: string;
   sort?: SortOption;
+  beginnerFriendly?: boolean;
+  goodFirstIssue?: boolean;
+  minStars?: number;
 };
 
 /* ========================================
@@ -568,6 +605,80 @@ export function buildProjectSearchParams(
     } else {
       params.delete("sort");
     }
+  }
+
+  /* ========================================
+     QUICK PRESET FILTERS
+  ======================================== */
+
+  if (updates.beginnerFriendly !== undefined) {
+    if (updates.beginnerFriendly) {
+      params.set("beginnerFriendly", "true");
+    } else {
+      params.delete("beginnerFriendly");
+    }
+  }
+
+  if (updates.goodFirstIssue !== undefined) {
+    if (updates.goodFirstIssue) {
+      params.set("goodFirstIssue", "true");
+    } else {
+      params.delete("goodFirstIssue");
+    }
+  }
+
+  if (updates.minStars !== undefined) {
+    if (updates.minStars && updates.minStars > 0) {
+      params.set("minStars", String(updates.minStars));
+    } else {
+      params.delete("minStars");
+    }
+  }
+
+  return params;
+}
+
+/* ========================================
+   BUILD SEARCH PARAMS DIRECTLY FROM STATE
+======================================== */
+
+export function buildProjectSearchParamsFromState(
+  state: ProjectFilterState
+): URLSearchParams {
+  const params = new URLSearchParams();
+
+  if (state.searchQuery.trim()) {
+    params.set("search", state.searchQuery.trim());
+  }
+
+  if (state.selectedDomain && state.selectedDomain !== "All") {
+    params.set("domain", state.selectedDomain);
+  }
+
+  if (state.selectedTechnologies && state.selectedTechnologies.length > 0) {
+    state.selectedTechnologies.forEach((technology) => {
+      params.append("technology", technology);
+    });
+  }
+
+  if (state.selectedDifficulty && state.selectedDifficulty !== "All") {
+    params.set("difficulty", state.selectedDifficulty);
+  }
+
+  if (state.sortOption && state.sortOption !== "relevance") {
+    params.set("sort", state.sortOption);
+  }
+
+  if (state.beginnerFriendly) {
+    params.set("beginnerFriendly", "true");
+  }
+
+  if (state.goodFirstIssue) {
+    params.set("goodFirstIssue", "true");
+  }
+
+  if (state.minStars && state.minStars > 0) {
+    params.set("minStars", String(state.minStars));
   }
 
   return params;

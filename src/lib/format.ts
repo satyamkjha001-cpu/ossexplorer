@@ -14,9 +14,15 @@ export function formatStars(stars: number): string {
 }
 
 export function formatDateAdded(dateAdded: string): string {
-  return new Date(dateAdded).toLocaleDateString("en-IN", {
+  const date = new Date(`${dateAdded}T00:00:00Z`);
+  if (Number.isNaN(date.getTime())) {
+    return dateAdded;
+  }
+
+  return date.toLocaleDateString("en-US", {
     day: "numeric",
     month: "short",
     year: "numeric",
+    timeZone: "UTC",
   });
 }

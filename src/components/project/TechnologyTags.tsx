@@ -1,8 +1,10 @@
 import Badge from "@/components/ui/Badge";
+import HighlightText from "@/components/ui/HighlightText";
 import { cn } from "@/lib/cn";
 
 type TechnologyTagsProps = {
   technologies: string[];
+  searchQuery?: string;
   size?: "sm" | "md";
   maxVisible?: number;
   className?: string;
@@ -10,6 +12,7 @@ type TechnologyTagsProps = {
 
 export default function TechnologyTags({
   technologies,
+  searchQuery,
   size = "sm",
   maxVisible,
   className,
@@ -35,7 +38,7 @@ export default function TechnologyTags({
               size === "md" && "px-3 py-1.5 text-sm"
             )}
           >
-            {technology}
+            <HighlightText text={technology} query={searchQuery} />
           </Badge>
         </span>
       ))}

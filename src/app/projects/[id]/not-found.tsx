@@ -29,7 +29,7 @@ export default function ProjectNotFound() {
           {/* Description */}
 
           <p className="mx-auto mt-4 max-w-lg text-sm leading-6 text-gray-600 dark:text-gray-300 sm:text-base">
-            The project you're looking for doesn't
+            The project you&apos;re looking for doesn&apos;t
             exist or may have been removed from
             the collection.
           </p>

@@ -1,45 +1,56 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useSyncExternalStore } from "react";
+
+function subscribeTheme(callback: () => void) {
+  window.addEventListener("storage", callback);
+  const media = window.matchMedia("(prefers-color-scheme: dark)");
+  media.addEventListener("change", callback);
+  return () => {
+    window.removeEventListener("storage", callback);
+    media.removeEventListener("change", callback);
+  };
+}
+
+function getThemeSnapshot(): string {
+  const saved = localStorage.getItem("theme");
+  if (saved) return saved;
+  return window.matchMedia("(prefers-color-scheme: dark)").matches
+    ? "dark"
+    : "light";
+}
+
+function getServerSnapshot(): string {
+  return "light";
+}
 
 export default function ThemeToggle() {
-  const [isDark, setIsDark] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
+
+  const themeSnapshot = useSyncExternalStore(
+    subscribeTheme,
+    getThemeSnapshot,
+    getServerSnapshot
+  );
+
+  const isDark = mounted && themeSnapshot === "dark";
 
   useEffect(() => {
-    const savedTheme = localStorage.getItem("theme");
-
-    const dark =
-      savedTheme === "dark" ||
-      (!savedTheme &&
-        window.matchMedia(
-          "(prefers-color-scheme: dark)"
-        ).matches);
-
-    setIsDark(dark);
-
-    document.documentElement.classList.toggle(
-      "dark",
-      dark
-    );
-
-    setMounted(true);
-  }, []);
+    if (mounted) {
+      document.documentElement.classList.toggle("dark", isDark);
+    }
+  }, [isDark, mounted]);
 
   const toggleTheme = () => {
-    const newDark = !isDark;
-
-    setIsDark(newDark);
-
-    document.documentElement.classList.toggle(
-      "dark",
-      newDark
-    );
-
-    localStorage.setItem(
-      "theme",
-      newDark ? "dark" : "light"
-    );
+    const nextDark = !isDark;
+    const nextTheme = nextDark ? "dark" : "light";
+    localStorage.setItem("theme", nextTheme);
+    document.documentElement.classList.toggle("dark", nextDark);
+    window.dispatchEvent(new Event("storage"));
   };
 
   return (

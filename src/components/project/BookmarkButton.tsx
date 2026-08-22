@@ -8,7 +8,6 @@ import { cn } from "@/lib/cn";
 import {
   addBookmark,
   getBookmarkSnapshot,
-  isBookmarked,
   removeBookmark,
   subscribeToBookmarks,
 } from "@/lib/bookmarks";
@@ -26,8 +25,15 @@ const BookmarkButton = ({ projectId }: BookmarkButtonProps) => {
     () => ""
   );
 
-  const bookmarked =
-    bookmarkSnapshot !== "" && isBookmarked(projectId);
+  let bookmarked = false;
+  try {
+    const savedIds: number[] = bookmarkSnapshot
+      ? JSON.parse(bookmarkSnapshot)
+      : [];
+    bookmarked = savedIds.includes(projectId);
+  } catch {
+    bookmarked = false;
+  }
 
   const handleBookmark = () => {
     if (bookmarked) {

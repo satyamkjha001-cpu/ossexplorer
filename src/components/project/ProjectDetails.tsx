@@ -663,9 +663,9 @@ const ProjectDetails = ({
               </h2>
 
               <p className="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-300">
-                We couldn't load live GitHub
+                We couldn&apos;t load live GitHub
                 information right now. The
-                project's local information is
+                project&apos;s local information is
                 still available.
               </p>
 

@@ -4,6 +4,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 
@@ -16,7 +17,7 @@ import {
 import { projects } from "@/data/projects";
 
 import {
-  buildProjectSearchParams,
+  buildProjectSearchParamsFromState,
   countActiveFilters,
   DIFFICULTIES,
   filterProjects,
@@ -32,329 +33,222 @@ import {
 
 export const PROJECTS_PER_PAGE = 10;
 
+function getFiltersFromSearchParams(
+  searchParams: ReturnType<typeof useSearchParams>
+): ProjectFilterState {
+  const difficulty =
+    searchParams.get("difficulty") ?? "All";
+
+  const beginnerFriendlyParam =
+    searchParams.get("beginnerFriendly");
+  const goodFirstIssueParam =
+    searchParams.get("goodFirstIssue");
+  const minStarsParam =
+    searchParams.get("minStars");
+
+  return {
+    searchQuery:
+      searchParams.get("search") ?? "",
+
+    selectedDomain:
+      searchParams.get("domain") ?? "All",
+
+    selectedTechnologies:
+      searchParams.getAll("technology"),
+
+    selectedDifficulty:
+      DIFFICULTIES.includes(
+        difficulty as (typeof DIFFICULTIES)[number]
+      )
+        ? difficulty
+        : "All",
+
+    sortOption: parseSortOption(
+      searchParams.get("sort")
+    ),
+
+    technologyMatchMode: "any",
+
+    beginnerFriendly:
+      beginnerFriendlyParam === "true",
+
+    goodFirstIssue:
+      goodFirstIssueParam === "true",
+
+    minStars: minStarsParam
+      ? parseInt(minStarsParam, 10) || undefined
+      : undefined,
+  };
+}
+
 export function useProjectFilters() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const [filters, setFilters] =
-    useState<ProjectFilterState>({
-      searchQuery: "",
-      selectedDomain: "All",
-      selectedTechnologies: [],
-      selectedDifficulty: "All",
-      sortOption: "relevance",
-      technologyMatchMode: "any",
-    });
+  const [filters, setFilters] = useState<ProjectFilterState>(() =>
+    getFiltersFromSearchParams(searchParams)
+  );
 
-  const [visibleCount, setVisibleCount] =
-    useState(PROJECTS_PER_PAGE);
+  const [visibleCount, setVisibleCount] = useState(PROJECTS_PER_PAGE);
+  const filtersInitialized = true;
 
-  const [
-    filtersInitialized,
-    setFiltersInitialized,
-  ] = useState(false);
+  const isFirstRender = useRef(true);
+  const prevUrlParamsRef = useRef(searchParams.toString());
 
   /* ========================================
-     INITIALIZE FILTERS FROM URL
+     SYNC ON EXTERNAL BROWSER NAVIGATION (BACK/FORWARD)
   ======================================== */
 
   useEffect(() => {
-    const difficulty =
-      searchParams.get("difficulty") ?? "All";
-
-    setFilters({
-      searchQuery:
-        searchParams.get("search") ?? "",
-
-      selectedDomain:
-        searchParams.get("domain") ?? "All",
-
-      selectedTechnologies:
-        searchParams.getAll("technology"),
-
-      selectedDifficulty:
-        DIFFICULTIES.includes(
-          difficulty as (typeof DIFFICULTIES)[number]
-        )
-          ? difficulty
-          : "All",
-
-      sortOption: parseSortOption(
-        searchParams.get("sort")
-      ),
-
-      technologyMatchMode: "any",
-    });
-
-    setVisibleCount(PROJECTS_PER_PAGE);
-
-    setFiltersInitialized(true);
+    const currentParamsString = searchParams.toString();
+    if (currentParamsString !== prevUrlParamsRef.current) {
+      prevUrlParamsRef.current = currentParamsString;
+      setFilters(getFiltersFromSearchParams(searchParams));
+      setVisibleCount(PROJECTS_PER_PAGE);
+    }
   }, [searchParams]);
 
   /* ========================================
-     UPDATE URL
-  ======================================== */
-
-  const pushParams = useCallback(
-    (
-      updates: Parameters<
-        typeof buildProjectSearchParams
-      >[1]
-    ) => {
-      const params =
-        buildProjectSearchParams(
-          new URLSearchParams(
-            searchParams.toString()
-          ),
-          updates
-        );
-
-      const queryString =
-        params.toString();
-
-      router.push(
-        queryString
-          ? `${pathname}?${queryString}`
-          : pathname,
-        {
-          scroll: false,
-        }
-      );
-    },
-    [
-      pathname,
-      router,
-      searchParams,
-    ]
-  );
-
-  /* ========================================
-     SEARCH URL SYNC
+     SAFELY SYNC STATE CHANGES TO URL AFTER RENDER
   ======================================== */
 
   useEffect(() => {
-    if (!filtersInitialized) {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
       return;
     }
 
-    const currentSearch =
-      searchParams.get("search") ?? "";
-
-    if (
-      currentSearch ===
-      filters.searchQuery.trim()
-    ) {
-      return;
-    }
+    const nextParams = buildProjectSearchParamsFromState(filters);
+    const nextQueryString = nextParams.toString();
+    prevUrlParamsRef.current = nextQueryString;
 
     const timeout = setTimeout(() => {
-      pushParams({
-        search: filters.searchQuery,
-      });
-    }, 500);
+      const currentUrlParams = searchParams.toString();
+      if (currentUrlParams !== nextQueryString) {
+        router.push(
+          nextQueryString ? `${pathname}?${nextQueryString}` : pathname,
+          { scroll: false }
+        );
+      }
+    }, 150);
 
-    return () =>
-      clearTimeout(timeout);
-  }, [
-    filters.searchQuery,
-    filtersInitialized,
-    pushParams,
-    searchParams,
-  ]);
+    return () => clearTimeout(timeout);
+  }, [filters, pathname, router, searchParams]);
 
   /* ========================================
      RESET PAGINATION
   ======================================== */
 
-  const resetPagination =
-    useCallback(() => {
-      setVisibleCount(
-        PROJECTS_PER_PAGE
-      );
-    }, []);
+  const resetPagination = useCallback(() => {
+    setVisibleCount(PROJECTS_PER_PAGE);
+  }, []);
 
   /* ========================================
      GENERIC FILTER UPDATE
   ======================================== */
 
-  const updateFilter =
-    useCallback(
-      <
-        K extends keyof ProjectFilterState
-      >(
-        key: K,
-        value: ProjectFilterState[K],
-        syncUrl?: Parameters<
-          typeof buildProjectSearchParams
-        >[1]
-      ) => {
-        setFilters((current) => ({
-          ...current,
-          [key]: value,
-        }));
+  const updateFilter = useCallback(
+    <K extends keyof ProjectFilterState>(
+      key: K,
+      value: ProjectFilterState[K]
+    ) => {
+      setFilters((current) => ({
+        ...current,
+        [key]: value,
+      }));
 
-        resetPagination();
-
-        if (syncUrl) {
-          pushParams(syncUrl);
-        }
-      },
-      [
-        pushParams,
-        resetPagination,
-      ]
-    );
+      resetPagination();
+    },
+    [resetPagination]
+  );
 
   /* ========================================
-     SEARCH
+     FILTER HANDLERS
   ======================================== */
 
-  const handleSearchChange = (
-    value: string
-  ) => {
-    updateFilter(
-      "searchQuery",
-      value
-    );
+  const handleSearchChange = (value: string) => {
+    updateFilter("searchQuery", value);
   };
 
-  /* ========================================
-     DOMAIN
-  ======================================== */
-
-  const handleDomainChange = (
-    value: string
-  ) => {
-    updateFilter(
-      "selectedDomain",
-      value,
-      {
-        domain: value,
-      }
-    );
+  const handleDomainChange = (value: string) => {
+    updateFilter("selectedDomain", value);
   };
 
-  /* ========================================
-     TECHNOLOGY
-  ======================================== */
+  const handleTechnologyChange = (technology: string) => {
+    setFilters((current) => {
+      const nextTechs = current.selectedTechnologies.includes(technology)
+        ? current.selectedTechnologies.filter((item) => item !== technology)
+        : [...current.selectedTechnologies, technology];
 
-  const handleTechnologyChange = (
-    technology: string
-  ) => {
-    const next =
-      filters.selectedTechnologies.includes(
-        technology
-      )
-        ? filters.selectedTechnologies.filter(
-            (item) =>
-              item !== technology
-          )
-        : [
-            ...filters.selectedTechnologies,
-            technology,
-          ];
+      return {
+        ...current,
+        selectedTechnologies: nextTechs,
+      };
+    });
 
-    updateFilter(
-      "selectedTechnologies",
-      next,
-      {
-        technologies: next,
-      }
-    );
+    resetPagination();
   };
 
-  /* ========================================
-     TECHNOLOGY MATCH MODE
-  ======================================== */
-
-  const handleTechnologyMatchModeChange = (
-    mode: TechnologyMatchMode
-  ) => {
-    updateFilter(
-      "technologyMatchMode",
-      mode
-    );
+  const handleTechnologyMatchModeChange = (mode: TechnologyMatchMode) => {
+    updateFilter("technologyMatchMode", mode);
   };
 
-  /* ========================================
-     DIFFICULTY
-  ======================================== */
-
-  const handleDifficultyChange = (
-    value: string
-  ) => {
-    updateFilter(
-      "selectedDifficulty",
-      value,
-      {
-        difficulty: value,
-      }
-    );
+  const handleDifficultyChange = (value: string) => {
+    updateFilter("selectedDifficulty", value);
   };
 
-  /* ========================================
-     SORT
-  ======================================== */
-
-  const handleSortChange = (
-    value: SortOption
-  ) => {
-    updateFilter(
-      "sortOption",
-      value,
-      {
-        sort: value,
-      }
-    );
+  const handleSortChange = (value: SortOption) => {
+    updateFilter("sortOption", value);
   };
 
-  /* ========================================
-     REMOVE TECHNOLOGY
-  ======================================== */
+  const handleBeginnerFriendlyToggle = () => {
+    setFilters((current) => ({
+      ...current,
+      beginnerFriendly: !current.beginnerFriendly,
+    }));
 
-  const removeTechnology = (
-    technology: string
-  ) => {
-    const next =
-      filters.selectedTechnologies.filter(
-        (item) =>
-          item !== technology
-      );
-
-    updateFilter(
-      "selectedTechnologies",
-      next,
-      {
-        technologies: next,
-      }
-    );
+    resetPagination();
   };
 
-  /* ========================================
-     CLEAR ALL FILTERS
-  ======================================== */
+  const handleGoodFirstIssueToggle = () => {
+    setFilters((current) => ({
+      ...current,
+      goodFirstIssue: !current.goodFirstIssue,
+    }));
+
+    resetPagination();
+  };
+
+  const handleMinStarsChange = (minStars: number | undefined) => {
+    setFilters((current) => ({
+      ...current,
+      minStars,
+    }));
+
+    resetPagination();
+  };
+
+  const removeTechnology = (technology: string) => {
+    handleTechnologyChange(technology);
+  };
 
   const clearFilters = () => {
-    setFilters({
+    const cleanState: ProjectFilterState = {
       searchQuery: "",
       selectedDomain: "All",
       selectedTechnologies: [],
       selectedDifficulty: "All",
       sortOption: "relevance",
       technologyMatchMode: "any",
-    });
+      beginnerFriendly: false,
+      goodFirstIssue: false,
+      minStars: undefined,
+    };
 
+    setFilters(cleanState);
     resetPagination();
-
-    router.push(pathname, {
-      scroll: false,
-    });
   };
-
-  /* ========================================
-     CLEAR SEARCH
-  ======================================== */
 
   const clearSearch = () => {
     setFilters((current) => ({
@@ -363,95 +257,38 @@ export function useProjectFilters() {
     }));
 
     resetPagination();
-
-    pushParams({
-      search: "",
-    });
   };
 
-  /* ========================================
-     LOAD MORE
-  ======================================== */
-
   const loadMore = () => {
-    setVisibleCount(
-      (current) =>
-        current + PROJECTS_PER_PAGE
-    );
+    setVisibleCount((current) => current + PROJECTS_PER_PAGE);
   };
 
   /* ========================================
      UNIQUE FILTER OPTIONS
   ======================================== */
 
-  const domains = useMemo(
-    () => getUniqueDomains(),
-    []
+  const domains = useMemo(() => getUniqueDomains(), []);
+  const technologies = useMemo(() => getUniqueTechnologies(), []);
+
+  /* ========================================
+     FILTER & SORT PROJECTS
+  ======================================== */
+
+  const filteredProjects = useMemo(
+    () => filterProjects(projects, filters),
+    [filters]
   );
 
-  const technologies = useMemo(
-    () => getUniqueTechnologies(),
-    []
+  const sortedProjects = useMemo(
+    () => sortProjects(filteredProjects, filters.sortOption, filters.searchQuery),
+    [filteredProjects, filters.sortOption, filters.searchQuery]
   );
 
-  /* ========================================
-     FILTER PROJECTS
-  ======================================== */
+  const visibleProjects = sortedProjects.slice(0, visibleCount);
+  const hasMoreProjects = visibleCount < sortedProjects.length;
 
-  const filteredProjects =
-    useMemo(
-      () =>
-        filterProjects(
-          projects,
-          filters
-        ),
-      [filters]
-    );
-
-  /* ========================================
-     SORT PROJECTS
-  ======================================== */
-
-  const sortedProjects =
-    useMemo(
-      () =>
-        sortProjects(
-          filteredProjects,
-          filters.sortOption
-        ),
-      [
-        filteredProjects,
-        filters.sortOption,
-      ]
-    );
-
-  /* ========================================
-     VISIBLE PROJECTS
-  ======================================== */
-
-  const visibleProjects =
-    sortedProjects.slice(
-      0,
-      visibleCount
-    );
-
-  const hasMoreProjects =
-    visibleCount <
-    sortedProjects.length;
-
-  /* ========================================
-     ACTIVE FILTERS
-  ======================================== */
-
-  const activeFilterCount =
-    countActiveFilters(filters);
-
-  const filtersActive =
-    hasActiveFilters(filters);
-
-  /* ========================================
-     RETURN
-  ======================================== */
+  const activeFilterCount = countActiveFilters(filters);
+  const filtersActive = hasActiveFilters(filters);
 
   return {
     filters,
@@ -475,6 +312,10 @@ export function useProjectFilters() {
 
     handleDifficultyChange,
     handleSortChange,
+
+    handleBeginnerFriendlyToggle,
+    handleGoodFirstIssueToggle,
+    handleMinStarsChange,
 
     removeTechnology,
     clearFilters,
